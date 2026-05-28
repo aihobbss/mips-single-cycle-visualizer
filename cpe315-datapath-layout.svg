@@ -1,0 +1,1551 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1080 600"
+   width="1080"
+   height="600"
+   font-family="DM Mono, Consolas, monospace"
+   version="1.1"
+   id="svg82"
+   sodipodi:docname="cpe315-datapath-layout.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs82">
+    <rect
+       x="62.75"
+       y="205.5"
+       width="11.25"
+       height="13.75"
+       id="rect86" />
+    <rect
+       x="896.95057"
+       y="240.11348"
+       width="38.974151"
+       height="23.166453"
+       id="rect83" />
+  </defs>
+  <sodipodi:namedview
+     id="namedview82"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.99999996"
+     inkscape:cx="322.00001"
+     inkscape:cy="256.50001"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="1042"
+     inkscape:window-y="387"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg82">
+    <inkscape:grid
+       id="grid84"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="1"
+       spacingy="1"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14902"
+       empspacing="5"
+       enabled="true"
+       visible="false" />
+  </sodipodi:namedview>
+  <!--
+  CPE-315 datapath — STANDALONE LAYOUT FILE
+  Edit this in Inkscape / draw.io / Figma. Move blocks and re-route wires
+  to your liking. The `id` attributes (b-pc, b-im, b-rf, etc. for blocks,
+  and the wire path order) are how I'll diff your changes against the
+  interactive version. DON'T rename ids; do feel free to:
+    - drag blocks to new positions (just changes their x/y or polygon points)
+    - edit any path's `d` attribute to reroute
+    - resize blocks (change width/height or polygon points)
+  When you're done, send the file back and I'll re-apply positions to the
+  interactive dashboard SVG.
+
+  Coord system: viewBox is 1080 wide x 600 tall. Top-left is (0,0).
+  x increases going right; y increases going DOWN (SVG convention).
+-->
+  <style
+     id="style1">
+  /* All elements visible at full opacity in this layout file (the live
+     interactive version dims things based on the selected instruction). */
+  .dp-block rect, .dp-block polygon, .dp-block path, .dp-block ellipse,
+  .dp-block circle { fill: #1e2023; stroke: #9aa0a6; stroke-width: 1.5; }
+  .dp-wire { stroke: #4ade80; stroke-width: 1.5; fill: none; }
+  .dp-block text { fill: #e8eaed; }
+  .dp-field-label, .dp-label-small { fill: #9aa0a6; font-size: 9px; }
+  .dp-signal { fill: #60a5fa; font-size: 10px; }
+</style>
+  <rect
+     width="1080"
+     height="600"
+     fill="#0e0f11"
+     id="rect1"
+     x="8.2030738e-10"
+     y="-2.8284516"
+     style="stroke-width:0.999997" />
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="M 693,478.5 791,479 790.48212,141.49923 812.5,141.5"
+     id="path38-8"
+     sodipodi:nodetypes="cccc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <path
+     d="m 607.44052,269.78083 0.25009,-146.26328"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5"
+     class="dp-wire"
+     id="path1-8"
+     sodipodi:nodetypes="cc"
+     data-uses="beq,bne" />
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 670.5075,72.75 0.003,-23.057469 118.249,0.05766 -0.002,23.749831 L 837.7575,73.25"
+     id="path40-2"
+     sodipodi:nodetypes="ccccc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <path
+     d="m 835.03813,137.24992 13.4937,-0.0812 -0.0191,-36.55891"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5"
+     class="dp-wire"
+     id="path1-3"
+     sodipodi:nodetypes="ccc"
+     data-uses="beq,bne" />
+  <path
+     class="dp-wire"
+     data-uses="lw,sw"
+     d="m 858.83519,251.44669 23.23224,0.17678"
+     id="path32-4"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="m 284.00357,156.83668 h -25"
+     id="path25-7-9"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="jal"
+     d="M 420.25,321.75 340.44585,321.50589 339.72521,156.88506 282.75,157.25"
+     id="path25-7-9-7"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5"
+     sodipodi:nodetypes="cccc" />
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 823,125.8125 v -6.75"
+     id="path31-2-3-61"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,jal"
+     d="M 484.75,203.25 V 196.5"
+     id="path31-2-3-6"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 926.43261,240.05698 0,-4.68198 0,-2.06802"
+     id="path31-2-2"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="ccc" />
+  <!-- ============================================================ -->
+  <!-- WIRES (drawn first; blocks render on top)                    -->
+  <!-- ============================================================ -->
+  <!-- PC → IM (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 160.53732,234.46967 240,235"
+     id="path1"
+     sodipodi:nodetypes="cc" />
+  <text
+     class="dp-label-small"
+     x="200.47577"
+     y="231.0052"
+     id="text1">PC</text>
+  <!-- PC → +4 adder -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="m 180.14659,234.48366 h 14.60478 l -0.22665,-57.52774 33.09064,-0.50024"
+     id="path2"
+     sodipodi:nodetypes="cccc" />
+  <!-- +4 adder → top wire → PCSrc input (top-most, always selected when no branch/jump) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw"
+     d="m 282.9165,156.9402 0.24264,-44.45895 -233.561949,0.6956 -0.364758,96.29118 10.642306,-0.0643"
+     id="path3"
+     sodipodi:nodetypes="ccccc" />
+  <text
+     class="dp-label-small"
+     x="667.875"
+     y="82.3125"
+     id="text3">PC+4</text>
+  <text
+     class="dp-label-small"
+     x="289.62109"
+     y="151.66211"
+     id="text3-9"
+     style="font-size:9px;fill:#9aa0a6">PC+4</text>
+  <!-- +4 adder → branch adder upper input (beq/bne) -->
+  <!-- Direct routing along the PC+4 adder y-line (y=170) — stays well BELOW
+             the Concat block (y=72-94) and Shift<<2 blocks. Was previously routed
+             up over the top of the diagram, where the vertical at x=230 punched
+             through the Concat body. Junction dot at (230, 170) marks the PC+4
+             fan-out (one branch goes UP to PCSrc, this branch goes RIGHT to adder). -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 282.90346,156.91615 190.97332,-0.25778 -0.3892,-85.499332 218.51413,1.965512"
+     id="path4"
+     sodipodi:nodetypes="cccc" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="283"
+     cy="157.5"
+     r="3"
+     fill="#9aa0a6"
+     id="circle4" />
+  <!-- IM → splitter (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 330 215 L 350 215"
+     id="path5" />
+  <!-- Splitter trunk: SPLIT into upper (J-only) + lower (always-on) so the
+             trunk doesn't appear "halfway lit" for non-J instructions. -->
+  <!-- Upper trunk: bus entry up to jump-logic tap point. Only when J selected. -->
+  <!-- Lower trunk: bus entry down to control unit. Always on (op/funct always read). -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 350 215 L 350 478"
+     id="path7" />
+  <path
+     class="dp-wire"
+     data-uses="addi,lw"
+     d="m 370.5,245.375 0.1875,25.81568 23.52112,-0.23608"
+     id="path7-9"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5"
+     sodipodi:nodetypes="ccc" />
+  <!-- Splitter junction dot at IM output -->
+  <!-- ===== Field tap-offs (each highlighted by which instruction needs it) ===== -->
+  <!-- addr[25-0] → Shift<<2 (jump): right edge of Shift<<2 block at x=340 -->
+  <!-- rs[25-21] → RF Read1 (anything reading $rs) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     d="M 350 215 L 420 215"
+     id="path9" />
+  <!-- rt[20-16] → RF Read2 (anything reading $rt) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,sw,beq,bne,addi,lw"
+     d="M 350 245 L 370.5 245"
+     id="path10" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,sw,beq,bne"
+     d="M 370.5 245 L 420 245"
+     id="path10b" />
+  <!-- rd[15-11] → RegDst mux upper input (R-type writeback target) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt"
+     d="m 349.75,283.25 45.23896,0.125"
+     id="path11"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="jal"
+     d="m 349.12818,296.62499 45.36396,-0.0518"
+     id="path11-8"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <!-- rt[20-16] → RegDst mux lower input (I-type writeback target) -->
+  <!-- imm[15-0] → routes BELOW the RF box → into Sign-Extend left-mid input.
+             Was previously a straight horizontal at y=335 that VISUALLY passed through
+             the RF (RF spans y=200-340). Now detours under RF at y=360. -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw,beq,bne"
+     d="m 350.00393,377.99738 152.99214,1.50524"
+     id="path13"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 143.50684,384.19552 34.49214,0.005"
+     id="path13-9"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.39111" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 250.97442,431.58497 99.52273,-0.0619"
+     id="path13-6"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.14405" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 142.3283,431.14919 53.28057,0.55464"
+     id="path13-6-3"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.14987" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 60.75598,265.5749 -34.998936,-0.1983 -0.02678,144.51985 43.556288,-0.76691"
+     id="path13-6-3-4"
+     sodipodi:nodetypes="cccc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.14987" />
+  <!-- op/funct → Control Unit (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 350 478 L 420 478"
+     id="path14" />
+  <!-- ===== Field labels (only visible when their tap is active) ===== -->
+  <text
+     class="dp-field-label"
+     data-uses="j,jal"
+     x="299.68881"
+     y="426.38791"
+     id="text14">addr[25-0]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     x="353.75"
+     y="211"
+     id="text15"
+     style="font-size:8px">rs[25-21]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt,sw,beq,bne,lw"
+     x="353.75"
+     y="238.5"
+     id="text16"
+     style="font-size:8px">rt[20-16]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt"
+     x="351.48099"
+     y="281.63895"
+     id="text17"
+     transform="scale(1.006446,0.99359528)"
+     style="font-size:7.33333px;stroke-width:0.575026;-inkscape-font-specification:'DM Mono, Consolas, monospace, Normal';font-family:'DM Mono', Consolas, monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#9aa0a6">rd[15-11]</text>
+  <text
+     class="dp-field-label"
+     data-uses="jal"
+     x="351.56171"
+     y="295.38766"
+     id="text17-5"
+     transform="scale(1.006446,0.99359528)"
+     style="font-size:8px;fill:#9aa0a6;stroke-width:0.575026">R[31]</text>
+  <!-- Lower rt label: identifies the RegDst lower-input tap; greys out when not used -->
+  <text
+     class="dp-field-label"
+     data-uses="addi,lw,sw,beq,bne"
+     x="352.5"
+     y="373"
+     id="text19">imm[15-0]</text>
+  <text
+     class="dp-field-label"
+     data-always="true"
+     data-uses=""
+     x="354"
+     y="475"
+     id="text20">op/funct</text>
+  <!-- RegDst mux out → RF Write Reg port -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     d="M 407.875,282 H 420"
+     id="path20" />
+  <!-- Sign-Extend output exits TOP-LEFT at (608, 320). Riser at x=608 keeps the
+             wire LEFT of both the ALU (x=665-735) and the ALUSrc mux (x=620-640) so
+             it never crosses through them. Bug fix: previous routing went through
+             x=680 which was INSIDE the ALU body. -->
+  <!-- Lower riser: SignExt → ALUSrc branch level. Lit for any SignExt user. -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw,beq,bne"
+     d="m 583.74992,380.01128 h 23.5 l -0.10347,-109.49373"
+     id="path21"
+     sodipodi:nodetypes="ccc" />
+  <!-- Junction at ALUSrc lower-input level -->
+  <!-- Branch RIGHT into ALUSrc mux lower-left input (addi/lw/sw) -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw"
+     d="m 607.65534,269.99695 h 13.41421"
+     id="path22" />
+  <!-- Upper riser: continues UP at x=608 to Shift<<2 bottom input. beq/bne only. -->
+  <!-- Shift<<2 (branch) → Branch adder lower input. Exits Shift<<2 RIGHT side
+             below the PC+4 wire (which sits at y=110), then drops down to enter the
+             adder's lower-left input at y=130. -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 650,116 41.5,-0.5"
+     id="path24"
+     sodipodi:nodetypes="cc" />
+  <!-- ===== Jump path wires ===== -->
+  <!-- Shift<<2 (jump) output → Concat right input (28 bits) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="M 214,136.75 H 189"
+     id="path25-7"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <!-- PC[31:28] tap (PC's upper 4 bits) → Concat top input (4 bits) -->
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 114.13393,235.20947 1.06066,112.7944 174.78476,-0.26481 0.29789,37.90429 -33.10019,-0.0388"
+     id="path26"
+     sodipodi:nodetypes="ccccc" />
+  <text
+     class="dp-field-label"
+     data-uses="j,jal"
+     x="173.38121"
+     y="344.52039"
+     id="text26">PC[31:28]</text>
+  <!-- Concat output (32 bits) → PCSrc input (jump target) -->
+  <!-- RF Read1 → ALU input A -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="M 566,219.25 565.74603,219.14641 664,218.5"
+     id="path28"
+     sodipodi:nodetypes="ccc" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     d="m 522.53723,224.49998 24.74603,-5.10359 20.00397,-0.14641"
+     id="path28-5"
+     sodipodi:nodetypes="ccc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <!-- RF Read2 → ALUSrc mux upper-left input -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,beq,bne,sw"
+     d="m 549.82322,252.95495 16.9205,0.0303"
+     id="path29"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,beq,bne"
+     d="m 566.50134,253 54.9205,0.1553"
+     id="path29-2"
+     sodipodi:nodetypes="cc"
+     style="fill:none;stroke:#4ade80;stroke-width:1.5" />
+  <!-- RF Read2 → DM data-in (sw stores Read2 value into memory) -->
+  <path
+     class="dp-wire"
+     data-uses="sw"
+     d="m 566.4725,253.62724 -0.12512,35.48145 318.67528,0.12886"
+     id="path30"
+     sodipodi:nodetypes="ccc" />
+  <!-- ALUSrc out → ALU input B -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="m 640.35355,262.25305 h 25"
+     id="path31" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,lw,sw"
+     d="m 631,243 0,-6.75"
+     id="path31-2"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     d="m 405.34375,264.3125 -0.0312,-8.6875"
+     id="path31-2-3"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="UNKNOWN"
+     d="m 73.502155,279.62868 -0.353553,-12.0533"
+     id="path31-2-3-0"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 1018.7449,255.66421 v -6.75"
+     id="path31-2-8-7"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <!-- ALU result → single output bus (any ALU-using instruction) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw"
+     d="m 734,251.5 124.70206,0.53033"
+     id="path32"
+     sodipodi:nodetypes="cc" />
+  <!-- ALU output junction — branches to DM addr and MemtoReg upper input -->
+  <!-- Junction → DM addr (lw, sw) -->
+  <!-- Junction → MemtoReg upper input (routed ABOVE DM so no visual overlap) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi"
+     d="m 858.58571,250.26321 0.35396,-46.24136 h 133.51079 l 0.0531,61.23793 14.57523,0.1852"
+     id="path34"
+     sodipodi:nodetypes="ccccc" />
+  <!-- DM read data → MemtoReg mux lower input (lw writeback) -->
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 972.36995,282.08442 c 11.66764,0.0781 23.33344,-0.0711 34.99995,-0.20202"
+     id="path35"
+     sodipodi:nodetypes="cc" />
+  <!-- MemtoReg out → wraps under everything → RF Write Data port -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw"
+     d="m 1024.9342,274.93146 18.9185,0 0.125,141.4655 H 406.5122 l 0.53033,-94.80946 12.5026,0.0341"
+     id="path36"
+     sodipodi:nodetypes="cccccc" />
+  <ellipse
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     cx="607.65533"
+     cy="269.99695"
+     fill="#9aa0a6"
+     id="circle21"
+     rx="3.3535528"
+     ry="3"
+     style="stroke-width:1.05728" />
+  <ellipse
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     cx="858.60358"
+     cy="250.75"
+     fill="#9aa0a6"
+     id="circle21-1"
+     rx="3.3535528"
+     ry="3"
+     style="stroke-width:1.05728"
+     inkscape:transform-center-x="0.70710678"
+     inkscape:transform-center-y="-0.70710678" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="566.4375"
+     cy="253.375"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-2" />
+  <!-- ALU zero flag → AND gate -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="M 735 232 L 745 232 L 745 130 L 815 130"
+     id="path37" />
+  <!-- Branch control signal → AND gate -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="M 480,478 H 693 V 269.5"
+     id="path38"
+     sodipodi:nodetypes="ccc" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="693.125"
+     cy="477.5625"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-5" />
+  <!-- AND out → PCSrc selector input (also enters from LEFT, top of mux) -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 858.00527,84.501181 15.94945,-0.04729 0.008,-55.107394 -855.296078,1.3382 -0.42157,214.945573 42.815413,-0.125"
+     id="path39"
+     sodipodi:nodetypes="cccccc" />
+  <!-- Branch adder out → top wire → PCSrc input (branch target) -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 761.5,96 44.25308,0.442531 -0.001,-3.942344 L 838.25,92.5"
+     id="path40"
+     sodipodi:nodetypes="cccc" />
+  <!-- jr: RF Read1 → PCSrc input (jump-register target, bottom-most) -->
+  <path
+     class="dp-wire"
+     data-uses="jr"
+     d="M 566.5,218.25 V 50.5 l -527.624738,0.05814 -0.251525,177.30037 23.556981,0.0607"
+     id="path41"
+     sodipodi:nodetypes="ccccc" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="350"
+     cy="215"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.875"
+     cy="245.125"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="194.12221"
+     cy="233.96967"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-5" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="370.5"
+     cy="245.5"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-8" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.875"
+     cy="283"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-8" />
+  <circle
+     class="dp-block"
+     data-uses="jal"
+     cx="349.75"
+     cy="296.625"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-8-2" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.95407"
+     cy="377.86917"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-2" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.86871"
+     cy="431.73117"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-2-2" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="566.6875"
+     cy="218.875"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-3" />
+  <circle
+     class="dp-block"
+     data-uses="beq,bne"
+     cx="670.5"
+     cy="72.25"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-3-6" />
+  <!-- PCSrc mux out → PC -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 84.759145,235.35355 136.56855,235"
+     id="path42"
+     sodipodi:nodetypes="cc" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="114.14288"
+     cy="235.43935"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-5-8" />
+  <!-- ============================================================ -->
+  <!-- BLOCKS                                                        -->
+  <!-- ============================================================ -->
+  <!-- PCSrc mux -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pcsrc-mux">
+    <polygon
+       points="54,260 30,275 30,195 54,210 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon42"
+       transform="matrix(0.99720172,0,0,1.0692902,30.52312,-12.39412)" />
+    <text
+       class="dp-signal"
+       x="75.026909"
+       y="288.47488"
+       text-anchor="middle"
+       font-size="9px"
+       id="text42"
+       style="fill:#5796e2;fill-opacity:1"
+       data-uses="">PCSrc</text>
+  </g>
+  <!-- PC register -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pc"
+     transform="translate(57.622213,-0.53033009)">
+    <rect
+       x="80"
+       y="215"
+       width="42"
+       height="40"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect42" />
+    <text
+       x="101"
+       y="240"
+       text-anchor="middle"
+       font-size="14px"
+       font-weight="500"
+       id="text43">PC</text>
+  </g>
+  <!-- PC+4 adder -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pc4"
+     transform="translate(53,-12.5)">
+    <text
+       x="125.74316"
+       y="153.17871"
+       text-anchor="middle"
+       font-size="14px"
+       id="text44-4"
+       style="fill:#e8eaed">+4</text>
+  </g>
+  <!-- Instruction Memory -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-im">
+    <rect
+       x="240"
+       y="200"
+       width="90"
+       height="70"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect44" />
+    <text
+       x="285"
+       y="230"
+       text-anchor="middle"
+       font-size="11"
+       id="text45">Instruction</text>
+    <text
+       x="285"
+       y="246"
+       text-anchor="middle"
+       font-size="11"
+       id="text46">Memory</text>
+    <text
+       x="248"
+       y="263"
+       font-size="9"
+       fill="var(--text3)"
+       id="text47">Read addr</text>
+  </g>
+  <!-- Register File -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr,jal"
+     id="b-rf">
+    <rect
+       x="420"
+       y="200"
+       width="130"
+       height="140"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect47" />
+    <text
+       x="483.5"
+       y="271.5"
+       text-anchor="middle"
+       font-size="11px"
+       id="text48">Register</text>
+    <text
+       x="483.5"
+       y="287.5"
+       text-anchor="middle"
+       font-size="11px"
+       id="text49">File</text>
+    <text
+       x="424"
+       y="219"
+       font-size="9"
+       fill="var(--text3)"
+       id="text50">Read1</text>
+    <text
+       x="424"
+       y="249"
+       font-size="9"
+       fill="var(--text3)"
+       id="text51">Read2</text>
+    <text
+       x="424"
+       y="285"
+       font-size="9"
+       fill="var(--text3)"
+       id="text52">WrReg</text>
+    <text
+       x="424"
+       y="324"
+       font-size="9"
+       fill="var(--text3)"
+       id="text53">WrData</text>
+    <text
+       x="545.11609"
+       y="255.71751"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text55">ReadData2</text>
+    <text
+       x="544.92139"
+       y="221.33789"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text55-2"
+       style="fill:#e8eaed">ReadData1</text>
+  </g>
+  <!-- RegDst mux (left of RF Write Reg port) -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     id="b-regdst-mux"
+     transform="translate(14.156855,-3.5000002)">
+    <polygon
+       points="400,275 400,290 380,300 380,265 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon55"
+       transform="matrix(0.97875227,0,0,1.5161661,8.1616145,-142.31693)" />
+    <text
+       class="dp-signal"
+       x="391.36874"
+       y="256.62503"
+       text-anchor="middle"
+       font-size="7px"
+       id="text56"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.33333px;font-family:'DM Mono', Consolas, monospace;-inkscape-font-specification:'DM Mono, Consolas, monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:middle;fill:#60a5fa;fill-opacity:1">RegDst</text>
+  </g>
+  <!-- Sign-Extend -->
+  <g
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     id="b-signext"
+     transform="translate(-45.5,11.5)">
+    <rect
+       x="548.5"
+       y="353"
+       width="80"
+       height="30"
+       rx="14"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect56" />
+    <text
+       x="588.5"
+       y="372"
+       text-anchor="middle"
+       font-size="11px"
+       id="text57">Sign-Extend</text>
+  </g>
+  <!-- Shift <<2 (branch path) -->
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-shl2">
+    <rect
+       x="580"
+       y="100"
+       width="70"
+       height="24"
+       rx="12"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect57" />
+    <text
+       x="615"
+       y="116"
+       text-anchor="middle"
+       font-size="10"
+       id="text58">Shift &lt;&lt;2</text>
+  </g>
+  <!-- Branch Adder -->
+  <!-- ALUSrc Mux -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     id="b-alusrc-mux"
+     transform="translate(1.5998737,8.5324856)">
+    <polygon
+       points="640,265 620,275 620,230 640,240 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon60" />
+  </g>
+  <!-- ALU -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     id="b-alu"
+     transform="translate(-0.35355339,-7.7781746)">
+    <polygon
+       points="735,235 735,265 665,285 665,260 675,250 665,240 665,215 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon61" />
+    <text
+       x="692.5"
+       y="253"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62">ALU</text>
+    <text
+       x="789.02838"
+       y="221.40044"
+       font-size="6.90003px"
+       fill="var(--text3)"
+       id="text63"
+       transform="scale(0.91001738,1.0988801)"
+       style="stroke-width:0.76667">zero</text>
+    <text
+       x="782.08606"
+       y="237.36488"
+       font-size="6.90003px"
+       fill="var(--text3)"
+       id="text63-1"
+       style="fill:#e8eaed;stroke-width:0.76667"
+       transform="scale(0.91001738,1.0988801)">result</text>
+  </g>
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-alu-1"
+     transform="translate(26.749997,-155.00571)">
+    <polygon
+       points="735,265 665,285 665,260 675,250 665,240 665,215 735,235 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon61-8"
+       style="fill:#1e2023;stroke:#9aa0a6;stroke-width:1.5" />
+    <text
+       x="688"
+       y="254"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62-9"
+       style="fill:#e8eaed">ADD</text>
+    <text
+       x="682.42633"
+       y="262.7254"
+       font-size="7.12114px"
+       fill="var(--text3)"
+       id="text63-1-7"
+       style="fill:#e8eaed;stroke-width:0.791238"
+       transform="scale(1.0390894,0.96238111)">result</text>
+  </g>
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jal"
+     id="b-alu-1-1"
+     transform="matrix(0.87262178,0,0,1.0016005,-372.08524,-94.905822)">
+    <polygon
+       points="665,240 665,215 735,235 735,265 665,285 665,260 675,250 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon61-8-1"
+       style="fill:#1e2023;stroke:#9aa0a6;stroke-width:1.5" />
+    <text
+       x="688"
+       y="254"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62-9-3"
+       style="fill:#e8eaed">ADD</text>
+    <text
+       x="682.42633"
+       y="262.7254"
+       font-size="7.12114px"
+       fill="var(--text3)"
+       id="text63-1-7-8"
+       style="fill:#e8eaed;stroke-width:0.791238"
+       transform="scale(1.0390894,0.96238111)">result</text>
+  </g>
+  <polygon
+     class="dp-block"
+     points="665,260 675,250 665,240 665,215 735,235 735,265 665,285 "
+     fill="var(--bg3)"
+     stroke="var(--border2)"
+     stroke-width="1.5"
+     id="polygon61-8-1-0"
+     data-uses="j,jal"
+     style="fill:#1e2023;stroke:#9aa0a6;stroke-width:1.5"
+     transform="matrix(-1.0983609,0,0,0.99883708,873.58768,159.17317)" />
+  <text
+     class="dp-block"
+     x="121.06536"
+     y="385.38864"
+     text-anchor="middle"
+     font-size="12.1536px"
+     id="text62-9-3-0"
+     style="fill:#e8eaed;stroke-width:0.934889"
+     transform="scale(0.93339561,1.0713571)"
+     data-uses="jal, j">CONCAT</text>
+  <text
+     class="dp-block"
+     x="69.881027"
+     y="398.64246"
+     font-size="6.65748px"
+     fill="var(--text3)"
+     id="text63-1-7-8-6"
+     data-uses="j,jal"
+     style="fill:#e8eaed;stroke-width:0.73972"
+     transform="scale(0.96988149,1.0310538)">result</text>
+  <!-- AND gate -->
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-and">
+    <path
+       d="m 809.5933,124.09567 h 19.1737 a 15.338956,15.872441 0 0 1 0,23.80866 h -19.1737 z"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="path63" />
+    <text class="dp-block"
+       x="821.25"
+       y="134"
+       text-anchor="middle"
+       font-size="9px"
+       id="text64"
+       data-uses="beq">AND</text>
+    <text class="dp-block"
+       x="821.54541"
+       y="143.54346"
+       text-anchor="middle"
+       font-size="9px"
+       id="text64-8"
+       style="fill:#e8eaed"
+       data-uses="bne">NAND</text>
+  </g>
+  <path
+     class="dp-wire"
+     data-uses="sw"
+     d="m 927.75,324.93629 v -6.75"
+     id="path31-2-8"
+     style="fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-width:1.5;stroke-opacity:1"
+     sodipodi:nodetypes="cc" />
+  <!-- Data Memory -->
+  <g
+     class="dp-block"
+     data-uses="lw,sw"
+     id="b-dm">
+    <rect
+       x="882.49493"
+       y="238.41422"
+       width="90"
+       height="80"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect64" />
+    <text
+       x="924.99493"
+       y="272.91422"
+       text-anchor="middle"
+       font-size="11px"
+       id="text65">Data</text>
+    <text
+       x="925.99493"
+       y="287.91422"
+       text-anchor="middle"
+       font-size="11px"
+       id="text66">Memory</text>
+    <text
+       x="888.99493"
+       y="253.41422"
+       font-size="9px"
+       fill="var(--text3)"
+       id="text67">Addr</text>
+    <text
+       x="888.49493"
+       y="313.41422"
+       font-size="9px"
+       fill="var(--text3)"
+       id="text68">Write Data</text>
+    <text
+       x="966.49493"
+       y="284.66422"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text69">D</text>
+  </g>
+  <!-- MemtoReg Mux -->
+  <g
+     class="dp-block"
+     data-uses=""
+     id="b-memtoreg-mux"
+     data-always="true"
+     transform="translate(9.1249999,-6.8750001)">
+    <polygon
+       class="dp-block"
+       points="920,242 920,272 900,282 900,232 "
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="polygon69"
+       data-uses="add,sub,and,or,slt,addi,lw"
+       transform="translate(95.994949,22.914214)" />
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline"
+       transform="matrix(1.5954736,0,0,1.7388972,-447.20387,-179.18026)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt,addi"><tspan
+         x="910"
+         y="261"
+         id="tspan1">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-446.78017,-161.60315)"
+       xml:space="preserve"
+       data-uses="lw"><tspan
+         x="910"
+         y="261"
+         id="tspan2">1</tspan></text>
+    <text
+       xml:space="preserve"
+       id="text83"
+       style="writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect83);display:inline;fill:#000000" />
+    <text
+       xml:space="preserve"
+       style="writing-mode:lr-tb;direction:ltr;fill:#000000"
+       x="923.11505"
+       y="235.75273"
+       id="text84"><tspan
+         sodipodi:role="line"
+         id="tspan84"
+         x="923.11505"
+         y="235.75273" /></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-833.07799,-190.074)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt,beq,bne"><tspan
+         x="910"
+         y="261"
+         id="tspan3">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-832.90429,-173.24689)"
+       xml:space="preserve"
+       data-uses="addi,lw,sw"><tspan
+         x="910"
+         y="261"
+         id="tspan4">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-642.15204,-43.715414)"
+       xml:space="preserve"
+       data-uses="addi,lw"><tspan
+         x="910"
+         y="261"
+         id="tspan5">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-4"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.63561,-104.21408)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,addi,slt,lw,sw"><tspan
+         x="910"
+         y="261"
+         id="tspan6">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-4-5"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.26061,-48.21408)"
+       xml:space="preserve"
+       data-uses="jal,j"><tspan
+         x="910"
+         y="261"
+         id="tspan7">3</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.38561,-86.589079)"
+       xml:space="preserve"
+       data-uses="jr"><tspan
+         x="910"
+         y="261"
+         id="tspan8">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-9-0"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.26061,-68.214079)"
+       xml:space="preserve"
+       data-uses="bne,beq"><tspan
+         x="910"
+         y="261"
+         id="tspan9">2</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-642.10186,-30.839301)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt"><tspan
+         x="910"
+         y="261"
+         id="tspan10">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1-6-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-641.90004,-18.320121)"
+       xml:space="preserve"
+       data-uses="jal"><tspan
+         x="910"
+         y="261"
+         id="tspan11">2</tspan></text>
+  </g>
+  <!-- ===== Jump path components ===== -->
+  <!-- Concat: combines PC[31:28] (4 bits) + Shift<<2 output (28 bits) → 32-bit jump target -->
+  <g
+     class="dp-block"
+     data-uses="j,jal"
+     id="b-concat"
+     transform="translate(-1.0025253,296.47918)">
+    <rect
+       x="179"
+       y="76.5"
+       width="80"
+       height="22"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect70" />
+    <text
+       x="218"
+       y="90.5"
+       text-anchor="middle"
+       font-size="10px"
+       id="text71">Concat</text>
+    <text
+       x="219.5"
+       y="113.5"
+       text-anchor="middle"
+       font-size="8px"
+       fill="var(--text3)"
+       id="text72">4+28→32</text>
+  </g>
+  <!-- Shift<<2 (jump): takes 26-bit address from inst[25:0], outputs 28 bits -->
+  <g
+     class="dp-block"
+     data-uses="j,jal"
+     id="b-shl2-jump"
+     transform="translate(-89.634773,348.45782)">
+    <rect
+       x="285"
+       y="72"
+       width="55"
+       height="22"
+       rx="11"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect72" />
+    <text
+       x="312"
+       y="87"
+       text-anchor="middle"
+       font-size="10px"
+       id="text73">&lt;&lt;2</text>
+  </g>
+  <!-- Control Unit -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-control">
+    <rect
+       x="420"
+       y="463"
+       width="140"
+       height="30"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect73" />
+    <text
+       x="490"
+       y="482"
+       text-anchor="middle"
+       font-size="11"
+       id="text74">Control Unit</text>
+  </g>
+  <!-- ============================================================ -->
+  <!-- CONTROL SIGNAL LABELS (visible only when relevant)           -->
+  <!-- Spread out so they never collide with each other or blocks   -->
+  <!-- ============================================================ -->
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,addi,slt,lw,jal"
+     x="485"
+     y="195"
+     text-anchor="middle"
+     id="text75">RegWrite</text>
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,lw,sw,addi,slt,beq,bne"
+     x="631"
+     y="233.5"
+     text-anchor="middle"
+     id="text76">ALUSrc</text>
+  <polygon
+     class="dp-block"
+     points="640,240 640,265 620,275 620,230 "
+     fill="var(--bg3)"
+     stroke="var(--border2)"
+     stroke-width="1.5"
+     id="polygon60-6"
+     style="fill:#1e2023;stroke:#9aa0a6;stroke-width:1.5"
+     transform="translate(218.4908,-169.65378)"
+     data-uses="beq,bne" />
+  <text
+     class="dp-block"
+     x="910"
+     y="261"
+     text-anchor="middle"
+     font-size="7px"
+     id="text70-6-4"
+     style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+     transform="matrix(1.5954736,0,0,1.7388972,-604.18706,-374.38527)"
+     xml:space="preserve"
+     data-uses="beq,bne"><tspan
+       x="910"
+       y="261"
+       id="tspan12">0</tspan></text>
+  <text
+     class="dp-block"
+     x="910"
+     y="261"
+     text-anchor="middle"
+     font-size="7px"
+     id="text70-9-1-2"
+     style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+     transform="matrix(1.5954736,0,0,1.7388972,-604.01336,-359.55816)"
+     xml:space="preserve"
+     data-uses="bne,beq"><tspan
+       x="910"
+       y="261"
+       id="tspan13">1</tspan></text>
+  <text
+     class="dp-signal"
+     data-uses="lw"
+     x="927.83984"
+     y="232"
+     text-anchor="middle"
+     id="text77">MemRead</text>
+  <text
+     class="dp-signal"
+     data-uses="sw"
+     x="927.57208"
+     y="333.59619"
+     text-anchor="middle"
+     id="text78">MemWrite</text>
+  <text
+     class="dp-signal"
+     data-uses="lw"
+     x="1018.2224"
+     y="243.68811"
+     text-anchor="middle"
+     id="text79">MemtoReg</text>
+  <text
+     class="dp-signal"
+     data-uses="beq,bne"
+     x="824"
+     y="118"
+     text-anchor="middle"
+     id="text80">Branch?</text>
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     x="711.5"
+     y="277"
+     text-anchor="middle"
+     id="text81">ALUOp</text>
+  <!-- Footer hint -->
+  <text
+     x="490"
+     y="455"
+     text-anchor="middle"
+     fill="var(--text3)"
+     font-size="10"
+     font-family="DM Mono, monospace"
+     id="text82">8 control signals → blocks above</text>
+  <text
+     xml:space="preserve"
+     style="writing-mode:lr-tb;direction:rtl;fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-opacity:1"
+     x="723.5"
+     y="302"
+     id="text85"><tspan
+       sodipodi:role="line"
+       id="tspan85" /></text>
+  <text
+     xml:space="preserve"
+     id="text86"
+     style="writing-mode:lr-tb;direction:rtl;white-space:pre;shape-inside:url(#rect86);display:inline;fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-opacity:1" />
+  <g
+     id="svg82-7"
+     transform="matrix(0.97723949,0,0,1.85538,7.4686577,-225.95192)" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="339.5"
+     cy="156.75"
+     r="3"
+     fill="#9aa0a6"
+     id="circle4-5" />
+</svg>

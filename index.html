@@ -1,0 +1,2404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIPS Single-Cycle Visualizer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0f11;
+    --bg2: #161719;
+    --bg3: #1e2023;
+    --border: #2a2d31;
+    --border2: #363a3f;
+    --text: #e8eaed;
+    --text2: #9aa0a6;
+    --text3: #5f6368;
+    --accent: #4ade80;
+    --accent2: #22c55e;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --info: #60a5fa;
+    --purple: #a78bfa;
+    --teal: #2dd4bf;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Right-now card */
+  .now-card {
+    background: linear-gradient(135deg, var(--bg2), var(--bg3));
+    border: 1px solid var(--border2); border-radius: 10px;
+    padding: 18px 20px; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .now-pill {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    padding: 4px 9px; border-radius: 4px;
+    background: var(--bg3); color: var(--text2); border: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  .now-pill.live { color: var(--accent); border-color: var(--accent); background: rgba(74,222,128,0.08); }
+  .now-pill.next { color: var(--info); border-color: var(--info); background: rgba(96,165,250,0.08); }
+  .now-pill.idle { color: var(--text3); }
+  .now-body { flex: 1; min-width: 0; }
+  .now-title { font-size: 15px; font-weight: 500; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .now-meta { font-size: 12px; color: var(--text2); }
+  .now-meta .now-loc { color: var(--text3); }
+  .now-countdown {
+    font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--accent);
+    flex: 0 0 auto; min-width: 90px; text-align: right;
+  }
+  .now-countdown.next { color: var(--info); }
+  .now-countdown.idle { color: var(--text3); font-size: 13px; }
+
+  /* Free-time gaps timeline (today) */
+  .timeline-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 18px;
+  }
+  .timeline-track {
+    position: relative; height: 38px; background: var(--bg3);
+    border-radius: 4px; overflow: hidden; margin-top: 10px;
+  }
+  .timeline-block {
+    position: absolute; top: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px; color: white;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    padding: 0 4px; border-radius: 2px;
+    cursor: default;
+  }
+  .timeline-block.gap { background: transparent; color: var(--text3); }
+  .timeline-block.gap.long { background: rgba(74,222,128,0.06); }
+  .timeline-axis {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 9px; color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* Week view (Sun-Sat grid) */
+  .week-grid {
+    display: grid; grid-template-columns: repeat(7, minmax(0,1fr));
+    gap: 6px;
+  }
+  .week-day {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 6px;
+    height: 360px;
+    display: flex; flex-direction: column;
+  }
+  .week-day-events {
+    flex: 1; min-height: 0; overflow-y: auto;
+    /* slim scrollbar */
+    scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  }
+  .week-day-events::-webkit-scrollbar { width: 4px; }
+  .week-day-events::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .week-day-header {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    text-align: center; margin-bottom: 8px;
+  }
+  .week-day.today .week-day-header { color: var(--accent); }
+  .week-day.today { border-color: var(--accent); }
+  .week-event {
+    font-size: 10.5px; font-family: var(--mono);
+    border-left: 3px solid var(--accent);
+    background: var(--bg3); padding: 4px 6px;
+    border-radius: 3px; margin-bottom: 4px; line-height: 1.35;
+    overflow: hidden;
+  }
+  .week-event-time { color: var(--text3); font-size: 9.5px; }
+  .week-event-title {
+    color: var(--text);
+    /* clamp to 2 lines to keep cards uniform when titles are long */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  .week-event.deadline {
+    /* deadlines are also in the deadline list below — dim them in the week view */
+    background: transparent;
+    border-left-style: dashed;
+    opacity: 0.78;
+  }
+  .week-event.deadline .week-event-title { color: var(--text2); }
+
+  /* Top bar */
+  .topbar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); letter-spacing: 0.04em; }
+  .quarter-badge {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .topbar-right { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  #live-time { color: var(--text2); }
+
+  /* Layout */
+  .main { padding: 24px 28px; max-width: 1200px; }
+
+  /* Section labels */
+  .section-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 10px; margin-top: 24px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* Grid layouts */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+
+  /* Stat card */
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .stat-value { font-family: var(--mono); font-size: 22px; font-weight: 500; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.warn { color: var(--warn); }
+  .stat-value.info { color: var(--info); }
+  .stat-value.purple { color: var(--purple); }
+
+  /* Class cards */
+  .class-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .class-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .class-id { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--accent); }
+  .class-type-badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 3px;
+    background: var(--bg3); color: var(--text3); border: 1px solid var(--border);
+    font-family: var(--mono);
+  }
+  .class-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .class-instructor { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+  .coreq-tag { font-size: 10px; color: var(--teal); font-family: var(--mono); }
+
+  /* Grade weight bars */
+  .weight-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .weight-label { font-size: 11px; color: var(--text2); min-width: 130px; }
+  .weight-bar-bg { flex: 1; height: 4px; background: var(--bg3); border-radius: 2px; }
+  .weight-bar { height: 4px; border-radius: 2px; background: var(--accent); }
+  .weight-pct { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 32px; text-align: right; }
+
+  /* Deadlines */
+  .deadline-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .deadline-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .deadline-item:last-child { border-bottom: none; }
+  .deadline-item:hover { background: var(--bg3); }
+  .deadline-check {
+    width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0;
+    border: 2px solid var(--border2); background: transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; padding: 0;
+  }
+  .deadline-check:hover { border-color: var(--accent); }
+  .deadline-check.checked {
+    background: var(--accent); border-color: var(--accent);
+  }
+  .deadline-check svg { width: 12px; height: 12px; display: none; }
+  .deadline-check.checked svg { display: block; }
+  .deadline-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-danger { background: var(--danger); }
+  .dot-warn   { background: var(--warn); }
+  .dot-info   { background: var(--info); }
+  .dot-ok     { background: var(--text3); }
+  .dot-done   { background: var(--accent); }
+  .deadline-class { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 44px; }
+  .deadline-name { font-size: 13px; flex: 1; }
+  .deadline-date { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  .deadline-days { font-family: var(--mono); font-size: 11px; min-width: 52px; text-align: right; }
+  .days-danger { color: var(--danger); }
+  .days-warn   { color: var(--warn); }
+  .days-ok     { color: var(--text3); }
+  .deadline-item.done .deadline-name,
+  .deadline-item.done .deadline-class,
+  .deadline-item.done .deadline-date,
+  .deadline-item.done .deadline-days {
+    text-decoration: line-through; color: var(--text3); opacity: 0.5;
+  }
+  .deadline-item.done .deadline-dot { opacity: 0.4; }
+
+  /* Class progress */
+  .class-progress { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .class-progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .class-progress-label { font-size: 11px; color: var(--text3); }
+  .class-progress-pct { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .class-progress-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .class-progress-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.4s ease; }
+  .class-progress-detail { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+  /* Progress bar (degree) */
+  .progress-track {
+    height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin: 8px 0 4px;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px; background: var(--accent);
+    transition: width 0.5s ease;
+  }
+
+  /* Quick launch */
+  .ql-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+  .ql-btn {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .ql-btn:hover { background: var(--bg3); border-color: var(--border2); }
+  .ql-label { font-size: 11px; font-weight: 500; color: var(--text2); }
+  .ql-cmd { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-top: 2px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 32px; padding: 16px 0; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    display: flex; justify-content: space-between;
+  }
+
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3, .ql-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .grid-4, .grid-2, .grid-3, .ql-grid { grid-template-columns: 1fr; }
+    .main { padding: 16px; }
+  }
+
+  /* ===== Tabs ===== */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent; border: none; padding: 10px 16px;
+    color: var(--text2); cursor: pointer;
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ===== Practice Quiz ===== */
+  .quiz-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 18px; flex-wrap: wrap; gap: 12px;
+  }
+  .quiz-title { font-size: 20px; font-weight: 500; }
+  .quiz-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+
+  .quiz-controls {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; margin-bottom: 16px;
+  }
+  .quiz-controls select, .quiz-controls button {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+    padding: 8px 12px; border-radius: 6px; font-family: var(--sans);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .quiz-controls button:hover { border-color: var(--accent); color: var(--accent); }
+  .quiz-controls .quiz-stats {
+    margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--text2);
+    display: flex; gap: 14px;
+  }
+  .quiz-stats .stat-num { color: var(--accent); font-weight: 500; }
+  .quiz-stats .stat-num.bad { color: var(--danger); }
+  .quiz-stats .stat-num.warn { color: var(--warn); }
+
+  .quiz-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; margin-bottom: 16px;
+  }
+  .quiz-meta {
+    display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+    font-family: var(--mono); font-size: 11px;
+  }
+  .quiz-meta .qtag {
+    padding: 2px 8px; border-radius: 4px; background: var(--bg3); color: var(--text3);
+    border: 1px solid var(--border);
+  }
+  .quiz-meta .qtag.chapter { color: var(--info); border-color: var(--info); }
+  .quiz-meta .qtag.type-multi { color: var(--purple); border-color: var(--purple); }
+  .quiz-meta .qtag.type-tf { color: var(--teal); border-color: var(--teal); }
+  .quiz-meta .qtag.type-order { color: var(--warn); border-color: var(--warn); }
+
+  .quiz-stem {
+    font-size: 16px; font-weight: 500; margin-bottom: 18px; line-height: 1.5;
+  }
+  .quiz-prompt {
+    font-size: 11px; color: var(--text3); margin-bottom: 10px;
+    font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 14px;
+    cursor: pointer; text-align: left; color: var(--text); font-family: var(--sans);
+    font-size: 13px; line-height: 1.4; transition: all 0.15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .quiz-option:hover:not(.locked) { border-color: var(--border2); background: #25282c; }
+  .quiz-option.locked { cursor: default; }
+  .quiz-option .opt-letter {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    width: 22px; height: 22px; border-radius: 4px;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .quiz-option.selected { border-color: var(--info); background: rgba(96,165,250,0.08); }
+  .quiz-option.selected .opt-letter { color: var(--info); border-color: var(--info); }
+  .quiz-option.correct { border-color: var(--accent); background: rgba(74,222,128,0.10); }
+  .quiz-option.correct .opt-letter { color: var(--accent); border-color: var(--accent); background: rgba(74,222,128,0.15); }
+  .quiz-option.wrong { border-color: var(--danger); background: rgba(248,113,113,0.08); }
+  .quiz-option.wrong .opt-letter { color: var(--danger); border-color: var(--danger); }
+  .quiz-option .opt-mark { margin-left: auto; font-family: var(--mono); font-size: 14px; }
+  .quiz-option.correct .opt-mark { color: var(--accent); }
+  .quiz-option.wrong .opt-mark { color: var(--danger); }
+
+  /* Order question — drag/select rank pills */
+  .order-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .order-item {
+    background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 12px;
+    font-size: 13px; line-height: 1.4;
+  }
+  .order-item .rank-input {
+    width: 36px; height: 32px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text); text-align: center; font-family: var(--mono);
+    font-size: 14px;
+  }
+  .order-item.correct { border-color: var(--accent); background: rgba(74,222,128,0.06); }
+  .order-item.wrong { border-color: var(--danger); background: rgba(248,113,113,0.06); }
+  .order-item .correct-rank {
+    margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text3);
+  }
+
+  .quiz-submit {
+    margin-top: 14px; background: var(--accent); color: var(--bg);
+    border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;
+    font-weight: 500; font-size: 13px; font-family: var(--sans);
+  }
+  .quiz-submit:hover { background: var(--accent2); }
+  .quiz-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .quiz-explanation {
+    margin-top: 18px; padding: 14px;
+    background: var(--bg3); border-left: 3px solid var(--info);
+    border-radius: 4px;
+    font-size: 13px; line-height: 1.6; color: var(--text);
+  }
+  .quiz-explanation.correct-bg { border-left-color: var(--accent); }
+  .quiz-explanation.wrong-bg { border-left-color: var(--danger); }
+  .quiz-explanation .exp-header {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; margin-bottom: 6px; color: var(--text3);
+  }
+  .quiz-explanation .src {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+  }
+
+  .quiz-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; }
+  .quiz-nav button {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+    padding: 10px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;
+    font-family: var(--sans);
+  }
+  .quiz-nav button:hover { border-color: var(--accent); color: var(--accent); }
+  .quiz-nav button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .quiz-nav button.primary:hover { background: var(--accent2); }
+  .quiz-progress-text { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  .quiz-empty {
+    background: var(--bg2); border: 1px dashed var(--border2);
+    border-radius: 8px; padding: 40px; text-align: center;
+    color: var(--text3); font-size: 14px;
+  }
+
+  /* ===== CPE 315 Datapath Builder ===== */
+  .dp-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+  }
+  .dp-title { font-size: 20px; font-weight: 500; }
+  .dp-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+
+  .dp-controls {
+    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px; margin-bottom: 16px;
+  }
+  .dp-section-label {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .dp-chips {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .dp-chip {
+    background: var(--bg3); color: var(--text2); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 16px; font-family: var(--mono);
+    font-size: 12px; cursor: pointer; transition: all 0.12s;
+    user-select: none;
+  }
+  .dp-chip:hover { border-color: var(--border2); color: var(--text); }
+  .dp-chip.selected {
+    background: rgba(74,222,128,0.12); color: var(--accent);
+    border-color: var(--accent);
+  }
+  .dp-chip .dp-chip-fmt {
+    margin-left: 6px; font-size: 9px; color: var(--text3); opacity: 0.7;
+  }
+  .dp-chip.selected .dp-chip-fmt { color: var(--accent); opacity: 0.7; }
+
+  .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+  .dp-actions button, .dp-actions select {
+    background: var(--bg3); color: var(--text); border: 1px solid var(--border);
+    padding: 6px 10px; border-radius: 6px; font-family: var(--sans);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .dp-actions button:hover, .dp-actions select:hover {
+    border-color: var(--accent); color: var(--accent);
+  }
+
+  .dp-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1100px) { .dp-grid { grid-template-columns: 1fr; } }
+
+  .dp-panel {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .dp-panel-title {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
+  }
+
+  .dp-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+  .dp-table th, .dp-table td {
+    padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border);
+  }
+  .dp-table th {
+    color: var(--text3); font-weight: 500; font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    cursor: help;
+  }
+  .dp-table td:first-child, .dp-table th:first-child {
+    text-align: left; color: var(--text); font-weight: 500;
+  }
+  .dp-table tr:last-child td { border-bottom: none; }
+
+  .dp-cell-1 { color: var(--accent); font-weight: 500; }
+  .dp-cell-0 { color: var(--danger); }
+  .dp-cell-X { color: var(--text3); opacity: 0.5; }
+  .dp-cell-op { color: var(--info); font-weight: 500; }
+  .dp-cell-yes { color: var(--accent); font-weight: 500; }
+  .dp-cell-no { color: var(--text3); opacity: 0.4; }
+  .dp-row-always td:first-child::after {
+    content: " (always)"; color: var(--text3); font-size: 10px; font-weight: 400;
+  }
+
+  .dp-empty {
+    background: var(--bg2); border: 1px dashed var(--border2);
+    border-radius: 8px; padding: 28px; text-align: center;
+    color: var(--text3); font-size: 13px; font-family: var(--mono);
+  }
+
+  /* Per-instruction expandable cards */
+  .dp-cards { display: flex; flex-direction: column; gap: 8px; }
+  .dp-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden;
+  }
+  .dp-card-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; cursor: pointer; user-select: none;
+    background: var(--bg2); transition: background 0.12s;
+  }
+  .dp-card-head:hover { background: var(--bg3); }
+  .dp-card-name { font-family: var(--mono); font-size: 14px; color: var(--accent); font-weight: 500; }
+  .dp-card-syntax { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .dp-card-fmt {
+    margin-left: auto; padding: 2px 8px; border-radius: 4px;
+    background: var(--bg3); border: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+  }
+  .dp-card-arrow { color: var(--text3); font-family: var(--mono); transition: transform 0.15s; }
+  .dp-card.open .dp-card-arrow { transform: rotate(90deg); }
+  .dp-card-body {
+    display: none; padding: 12px 14px 14px; border-top: 1px solid var(--border);
+    font-size: 13px; line-height: 1.5;
+  }
+  .dp-card.open .dp-card-body { display: block; }
+  .dp-card-row { display: flex; gap: 10px; margin-top: 6px; align-items: baseline; }
+  .dp-card-row .lbl {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.04em; min-width: 70px;
+  }
+  .dp-card-row .val { font-family: var(--mono); font-size: 12px; color: var(--text); }
+
+  /* SVG diagram */
+  .dp-svg-wrap {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px; margin-bottom: 16px; overflow-x: auto;
+  }
+  .dp-svg-wrap svg { display: block; max-width: 100%; height: auto; }
+  .dp-svg-legend {
+    display: flex; gap: 18px; margin-top: 10px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    align-items: center; flex-wrap: wrap;
+  }
+  .dp-svg-legend .swatch {
+    display: inline-block; width: 14px; height: 3px; vertical-align: middle;
+    margin-right: 6px; border-radius: 1px;
+  }
+  .dp-svg-legend .swatch.active { background: var(--accent); }
+  .dp-svg-legend .swatch.dimmed { background: #555; opacity: 0.4; }
+
+  /* SVG block / wire / signal styling. Defaults are dimmed; .dp-active brings them forward. */
+  #dp-svg .dp-block rect, #dp-svg .dp-block polygon, #dp-svg .dp-block path,
+  #dp-svg .dp-block circle, #dp-svg .dp-block ellipse {
+    transition: opacity 0.2s, stroke 0.2s, fill 0.2s;
+  }
+  #dp-svg .dp-block { opacity: 0.22; }
+  #dp-svg .dp-block.dp-active { opacity: 1; }
+  #dp-svg .dp-block text { fill: var(--text2); font-family: var(--mono); }
+  #dp-svg .dp-block.dp-active text { fill: var(--text); }
+
+  #dp-svg .dp-wire {
+    stroke: #555; stroke-width: 1.5; fill: none; opacity: 0.25;
+    transition: opacity 0.2s, stroke 0.2s, stroke-width 0.2s;
+  }
+  #dp-svg .dp-wire.dp-active {
+    stroke: var(--accent); opacity: 0.95; stroke-width: 2;
+  }
+
+  #dp-svg .dp-signal {
+    font-family: var(--mono); font-size: 10px; fill: var(--info); opacity: 0;
+    transition: opacity 0.2s;
+  }
+  #dp-svg .dp-signal.dp-active { opacity: 1; }
+  #dp-svg .dp-label { font-family: var(--mono); font-size: 11px; fill: var(--text2); }
+  #dp-svg .dp-label-small { font-family: var(--mono); font-size: 9px; fill: var(--text3); }
+  #dp-svg .dp-field-label {
+    font-family: var(--mono); font-size: 9px; fill: var(--text3); opacity: 0.35;
+    transition: opacity 0.2s, fill 0.2s;
+  }
+  #dp-svg .dp-field-label.dp-active { opacity: 1; fill: var(--accent); }
+
+  /* ===== Debug overlay ===== */
+  #dp-debug.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  #dp-debug-panel {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; margin-top: 10px; font-family: var(--mono); font-size: 12px;
+  }
+  .dp-debug-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .dp-debug-label {
+    color: var(--text3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+    min-width: 130px;
+  }
+  .dp-debug-mono { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  /* Highlight the hovered element while debug mode is on */
+  #dp-svg.debug-mode [data-uses]:hover {
+    outline: 2px dashed var(--info);
+    outline-offset: 2px;
+  }
+  #dp-svg.debug-mode .dp-wire {
+    /* Make wires THICKER and slightly more opaque in debug mode so they're easier to click. */
+    stroke-width: 2.2; opacity: 0.55;
+  }
+  #dp-svg.debug-mode .dp-wire.dp-active { opacity: 0.95; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="logo">MIPS Single-Cycle Visualizer</span>
+    <span class="quarter-badge">CPE 315</span>
+  </div>
+  <div class="topbar-right"><a href="https://github.com/aihobbss/mips-single-cycle-visualizer" target="_blank" rel="noopener" style="color:var(--text3);text-decoration:none;">github ↗</a></div>
+</div>
+
+<div class="main">
+
+  
+  <div class="dp-app">
+    <div class="dp-header">
+      <div>
+        <div class="dp-title">CPE 315 — Single-Cycle Datapath Builder</div>
+        <div class="dp-subtitle">Pick instructions · see required hardware + control signals</div>
+      </div>
+    </div>
+
+    <div class="dp-controls">
+      <span class="dp-section-label">Instructions:</span>
+      <div class="dp-chips" id="dp-chips"></div>
+      <div class="dp-actions">
+        <select id="dp-presets">
+          <option value="">Common pairs…</option>
+        </select>
+        <button id="dp-clear">Clear all</button>
+        <button id="dp-all">Select all</button>
+        <button id="dp-debug" title="Hover any wire or block to see its data-uses tag">Debug</button>
+      </div>
+    </div>
+
+    <div class="dp-svg-wrap">
+      <svg id="dp-svg" viewBox="0 0 1080 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <!--
+  CPE-315 datapath — STANDALONE LAYOUT FILE
+  Edit this in Inkscape / draw.io / Figma. Move blocks and re-route wires
+  to your liking. The `id` attributes (b-pc, b-im, b-rf, etc. for blocks,
+  and the wire path order) are how I'll diff your changes against the
+  interactive version. DON'T rename ids; do feel free to:
+    - drag blocks to new positions (just changes their x/y or polygon points)
+    - edit any path's `d` attribute to reroute
+    - resize blocks (change width/height or polygon points)
+  When you're done, send the file back and I'll re-apply positions to the
+  interactive dashboard SVG.
+
+  Coord system: viewBox is 1080 wide x 600 tall. Top-left is (0,0).
+  x increases going right; y increases going DOWN (SVG convention).
+-->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="M 693,478.5 791,479 790.48212,141.49923 812.5,141.5"
+     id="path38-8" style="stroke-width:1.5" />
+  <path
+     d="m 607.44052,269.78083 0.25009,-146.26328" style="stroke-width:1.5"
+     class="dp-wire"
+     id="path1-8"
+     data-uses="beq,bne" />
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 670.5075,72.75 0.003,-23.057469 118.249,0.05766 -0.002,23.749831 L 837.7575,73.25"
+     id="path40-2" style="stroke-width:1.5" />
+  <path
+     d="m 835.03813,137.24992 13.4937,-0.0812 -0.0191,-36.55891" style="stroke-width:1.5"
+     class="dp-wire"
+     id="path1-3"
+     data-uses="beq,bne" />
+  <path
+     class="dp-wire"
+     data-uses="lw,sw"
+     d="m 858.83519,251.44669 23.23224,0.17678"
+     id="path32-4" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="m 284.00357,156.83668 h -25"
+     id="path25-7-9" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="jal"
+     d="M 420.25,321.75 340.44585,321.50589 339.72521,156.88506 282.75,157.25"
+     id="path25-7-9-7" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 823,125.8125 v -6.75"
+     id="path31-2-3-61" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,jal"
+     d="M 484.75,203.25 V 196.5"
+     id="path31-2-3-6" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 926.43261,240.05698 0,-4.68198 0,-2.06802"
+     id="path31-2-2" style="stroke-width:1.5" />
+  <!-- ============================================================ -->
+  <!-- WIRES (drawn first; blocks render on top)                    -->
+  <!-- ============================================================ -->
+  <!-- PC → IM (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 160.53732,234.46967 240,235"
+     id="path1" />
+  <text
+     class="dp-label-small"
+     x="200.47577"
+     y="231.0052"
+     id="text1">PC</text>
+  <!-- PC → +4 adder -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="m 180.14659,234.48366 h 14.60478 l -0.22665,-57.52774 33.09064,-0.50024"
+     id="path2" />
+  <!-- +4 adder → top wire → PCSrc input (top-most, always selected when no branch/jump) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw"
+     d="m 282.9165,156.9402 0.24264,-44.45895 -233.561949,0.6956 -0.364758,96.29118 10.642306,-0.0643"
+     id="path3" />
+  <text
+     class="dp-label-small"
+     x="667.875"
+     y="82.3125"
+     id="text3">PC+4</text>
+  <text
+     class="dp-label-small"
+     x="289.62109"
+     y="151.66211"
+     id="text3-9"
+     style="font-size:9px;fill:#9aa0a6">PC+4</text>
+  <!-- +4 adder → branch adder upper input (beq/bne) -->
+  <!-- Direct routing along the PC+4 adder y-line (y=170) — stays well BELOW
+             the Concat block (y=72-94) and Shift<<2 blocks. Was previously routed
+             up over the top of the diagram, where the vertical at x=230 punched
+             through the Concat body. Junction dot at (230, 170) marks the PC+4
+             fan-out (one branch goes UP to PCSrc, this branch goes RIGHT to adder). -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 282.90346,156.91615 190.97332,-0.25778 -0.3892,-85.499332 218.51413,1.965512"
+     id="path4" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="283"
+     cy="157.5"
+     r="3"
+     fill="#9aa0a6"
+     id="circle4" />
+  <!-- IM → splitter (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 330 215 L 350 215"
+     id="path5" />
+  <!-- Splitter trunk: SPLIT into upper (J-only) + lower (always-on) so the
+             trunk doesn't appear "halfway lit" for non-J instructions. -->
+  <!-- Upper trunk: bus entry up to jump-logic tap point. Only when J selected. -->
+  <!-- Lower trunk: bus entry down to control unit. Always on (op/funct always read). -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 350 215 L 350 478"
+     id="path7" />
+  <path
+     class="dp-wire"
+     data-uses="addi,lw"
+     d="m 370.5,245.375 0.1875,25.81568 23.52112,-0.23608"
+     id="path7-9" style="stroke-width:1.5" />
+  <!-- Splitter junction dot at IM output -->
+  <!-- ===== Field tap-offs (each highlighted by which instruction needs it) ===== -->
+  <!-- addr[25-0] → Shift<<2 (jump): right edge of Shift<<2 block at x=340 -->
+  <!-- rs[25-21] → RF Read1 (anything reading $rs) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     d="M 350 215 L 420 215"
+     id="path9" />
+  <!-- rt[20-16] → RF Read2 (anything reading $rt) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,sw,beq,bne,addi,lw"
+     d="M 350 245 L 370.5 245"
+     id="path10" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,sw,beq,bne"
+     d="M 370.5 245 L 420 245"
+     id="path10b" />
+  <!-- rd[15-11] → RegDst mux upper input (R-type writeback target) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt"
+     d="m 349.75,283.25 45.23896,0.125"
+     id="path11" />
+  <path
+     class="dp-wire"
+     data-uses="jal"
+     d="m 349.12818,296.62499 45.36396,-0.0518"
+     id="path11-8" style="stroke-width:1.5" />
+  <!-- rt[20-16] → RegDst mux lower input (I-type writeback target) -->
+  <!-- imm[15-0] → routes BELOW the RF box → into Sign-Extend left-mid input.
+             Was previously a straight horizontal at y=335 that VISUALLY passed through
+             the RF (RF spans y=200-340). Now detours under RF at y=360. -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw,beq,bne"
+     d="m 350.00393,377.99738 152.99214,1.50524"
+     id="path13" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 143.50684,384.19552 34.49214,0.005"
+     id="path13-9" style="stroke-width:1.39111" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 250.97442,431.58497 99.52273,-0.0619"
+     id="path13-6" style="stroke-width:1.14405" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 142.3283,431.14919 53.28057,0.55464"
+     id="path13-6-3" style="stroke-width:1.14987" />
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 60.75598,265.5749 -34.998936,-0.1983 -0.02678,144.51985 43.556288,-0.76691"
+     id="path13-6-3-4" style="stroke-width:1.14987" />
+  <!-- op/funct → Control Unit (always) -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 350 478 L 420 478"
+     id="path14" />
+  <!-- ===== Field labels (only visible when their tap is active) ===== -->
+  <text
+     class="dp-field-label"
+     data-uses="j,jal"
+     x="299.68881"
+     y="426.38791"
+     id="text14">addr[25-0]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     x="353.75"
+     y="211"
+     id="text15"
+     style="font-size:8px">rs[25-21]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt,sw,beq,bne,lw"
+     x="353.75"
+     y="238.5"
+     id="text16"
+     style="font-size:8px">rt[20-16]</text>
+  <text
+     class="dp-field-label"
+     data-uses="add,sub,and,or,slt"
+     x="351.48099"
+     y="281.63895"
+     id="text17"
+     transform="scale(1.006446,0.99359528)"
+     style="font-size:7.33333px;stroke-width:0.575026;-inkscape-font-specification:'DM Mono, Consolas, monospace, Normal';font-family:'DM Mono', Consolas, monospace;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#9aa0a6">rd[15-11]</text>
+  <text
+     class="dp-field-label"
+     data-uses="jal"
+     x="351.56171"
+     y="295.38766"
+     id="text17-5"
+     transform="scale(1.006446,0.99359528)"
+     style="font-size:8px;fill:#9aa0a6;stroke-width:0.575026">R[31]</text>
+  <!-- Lower rt label: identifies the RegDst lower-input tap; greys out when not used -->
+  <text
+     class="dp-field-label"
+     data-uses="addi,lw,sw,beq,bne"
+     x="352.5"
+     y="373"
+     id="text19">imm[15-0]</text>
+  <text
+     class="dp-field-label"
+     data-always="true"
+     data-uses=""
+     x="354"
+     y="475"
+     id="text20">op/funct</text>
+  <!-- RegDst mux out → RF Write Reg port -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     d="M 407.875,282 H 420"
+     id="path20" />
+  <!-- Sign-Extend output exits TOP-LEFT at (608, 320). Riser at x=608 keeps the
+             wire LEFT of both the ALU (x=665-735) and the ALUSrc mux (x=620-640) so
+             it never crosses through them. Bug fix: previous routing went through
+             x=680 which was INSIDE the ALU body. -->
+  <!-- Lower riser: SignExt → ALUSrc branch level. Lit for any SignExt user. -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw,beq,bne"
+     d="m 583.74992,380.01128 h 23.5 l -0.10347,-109.49373"
+     id="path21" />
+  <!-- Junction at ALUSrc lower-input level -->
+  <!-- Branch RIGHT into ALUSrc mux lower-left input (addi/lw/sw) -->
+  <path
+     class="dp-wire"
+     data-uses="addi,lw,sw"
+     d="m 607.65534,269.99695 h 13.41421"
+     id="path22" />
+  <!-- Upper riser: continues UP at x=608 to Shift<<2 bottom input. beq/bne only. -->
+  <!-- Shift<<2 (branch) → Branch adder lower input. Exits Shift<<2 RIGHT side
+             below the PC+4 wire (which sits at y=110), then drops down to enter the
+             adder's lower-left input at y=130. -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 650,116 41.5,-0.5"
+     id="path24" />
+  <!-- ===== Jump path wires ===== -->
+  <!-- Shift<<2 (jump) output → Concat right input (28 bits) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,addi,slt,lw,sw,beq,bne,jal"
+     d="M 214,136.75 H 189"
+     id="path25-7" style="stroke-width:1.5" />
+  <!-- PC[31:28] tap (PC's upper 4 bits) → Concat top input (4 bits) -->
+  <path
+     class="dp-wire"
+     data-uses="j,jal"
+     d="m 114.13393,235.20947 1.06066,112.7944 174.78476,-0.26481 0.29789,37.90429 -33.10019,-0.0388"
+     id="path26" />
+  <text
+     class="dp-field-label"
+     data-uses="j,jal"
+     x="173.38121"
+     y="344.52039"
+     id="text26">PC[31:28]</text>
+  <!-- Concat output (32 bits) → PCSrc input (jump target) -->
+  <!-- RF Read1 → ALU input A -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="M 566,219.25 565.74603,219.14641 664,218.5"
+     id="path28" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr"
+     d="m 522.53723,224.49998 24.74603,-5.10359 20.00397,-0.14641"
+     id="path28-5" style="stroke-width:1.5" />
+  <!-- RF Read2 → ALUSrc mux upper-left input -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,beq,bne,sw"
+     d="m 549.82322,252.95495 16.9205,0.0303"
+     id="path29" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,beq,bne"
+     d="m 566.50134,253 54.9205,0.1553"
+     id="path29-2" style="stroke-width:1.5" />
+  <!-- RF Read2 → DM data-in (sw stores Read2 value into memory) -->
+  <path
+     class="dp-wire"
+     data-uses="sw"
+     d="m 566.4725,253.62724 -0.12512,35.48145 318.67528,0.12886"
+     id="path30" />
+  <!-- ALUSrc out → ALU input B -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="m 640.35355,262.25305 h 25"
+     id="path31" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,lw,sw"
+     d="m 631,243 0,-6.75"
+     id="path31-2" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     d="m 405.34375,264.3125 -0.0312,-8.6875"
+     id="path31-2-3" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="UNKNOWN"
+     d="m 73.502155,279.62868 -0.353553,-12.0533"
+     id="path31-2-3-0" style="stroke-width:1.5" />
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 1018.7449,255.66421 v -6.75"
+     id="path31-2-8-7" style="stroke-width:1.5" />
+  <!-- ALU result → single output bus (any ALU-using instruction) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw"
+     d="m 734,251.5 124.70206,0.53033"
+     id="path32" />
+  <!-- ALU output junction — branches to DM addr and MemtoReg upper input -->
+  <!-- Junction → DM addr (lw, sw) -->
+  <!-- Junction → MemtoReg upper input (routed ABOVE DM so no visual overlap) -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi"
+     d="m 858.58571,250.26321 0.35396,-46.24136 h 133.51079 l 0.0531,61.23793 14.57523,0.1852"
+     id="path34" />
+  <!-- DM read data → MemtoReg mux lower input (lw writeback) -->
+  <path
+     class="dp-wire"
+     data-uses="lw"
+     d="m 972.36995,282.08442 c 11.66764,0.0781 23.33344,-0.0711 34.99995,-0.20202"
+     id="path35" />
+  <!-- MemtoReg out → wraps under everything → RF Write Data port -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw"
+     d="m 1024.9342,274.93146 18.9185,0 0.125,141.4655 H 406.5122 l 0.53033,-94.80946 12.5026,0.0341"
+     id="path36" />
+  <ellipse
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     cx="607.65533"
+     cy="269.99695"
+     fill="#9aa0a6"
+     id="circle21"
+     rx="3.3535528"
+     ry="3"
+     style="stroke-width:1.05728" />
+  <ellipse
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     cx="858.60358"
+     cy="250.75"
+     fill="#9aa0a6"
+     id="circle21-1"
+     rx="3.3535528"
+     ry="3"
+     style="stroke-width:1.05728" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="566.4375"
+     cy="253.375"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-2" />
+  <!-- ALU zero flag → AND gate -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="M 735 232 L 745 232 L 745 130 L 815 130"
+     id="path37" />
+  <!-- Branch control signal → AND gate -->
+  <path
+     class="dp-wire"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     d="M 480,478 H 693 V 269.5"
+     id="path38" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="693.125"
+     cy="477.5625"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-5" />
+  <!-- AND out → PCSrc selector input (also enters from LEFT, top of mux) -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 858.00527,84.501181 15.94945,-0.04729 0.008,-55.107394 -855.296078,1.3382 -0.42157,214.945573 42.815413,-0.125"
+     id="path39" />
+  <!-- Branch adder out → top wire → PCSrc input (branch target) -->
+  <path
+     class="dp-wire"
+     data-uses="beq,bne"
+     d="m 761.5,96 44.25308,0.442531 -0.001,-3.942344 L 838.25,92.5"
+     id="path40" />
+  <!-- jr: RF Read1 → PCSrc input (jump-register target, bottom-most) -->
+  <path
+     class="dp-wire"
+     data-uses="jr"
+     d="M 566.5,218.25 V 50.5 l -527.624738,0.05814 -0.251525,177.30037 23.556981,0.0607"
+     id="path41" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="350"
+     cy="215"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.875"
+     cy="245.125"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="194.12221"
+     cy="233.96967"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-5" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="370.5"
+     cy="245.5"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-8" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.875"
+     cy="283"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-8" />
+  <circle
+     class="dp-block"
+     data-uses="jal"
+     cx="349.75"
+     cy="296.625"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-8-2" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.95407"
+     cy="377.86917"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-2" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="349.86871"
+     cy="431.73117"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-2-2" />
+  <circle
+     class="dp-block"
+     data-uses="add,sub,addi,slt,lw,sw,beq,bne"
+     cx="566.6875"
+     cy="218.875"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-3" />
+  <circle
+     class="dp-block"
+     data-uses="beq,bne"
+     cx="670.5"
+     cy="72.25"
+     r="3"
+     fill="#9aa0a6"
+     id="circle32-3-6" />
+  <!-- PCSrc mux out → PC -->
+  <path
+     class="dp-wire"
+     data-always="true"
+     data-uses=""
+     d="M 84.759145,235.35355 136.56855,235"
+     id="path42" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="114.14288"
+     cy="235.43935"
+     r="3.5"
+     fill="#9aa0a6"
+     id="circle7-1-5-8" />
+  <!-- ============================================================ -->
+  <!-- BLOCKS                                                        -->
+  <!-- ============================================================ -->
+  <!-- PCSrc mux -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pcsrc-mux">
+    <polygon
+       points="54,260 30,275 30,195 54,210 "
+       stroke-width="1.5"
+       id="polygon42"
+       transform="matrix(0.99720172,0,0,1.0692902,30.52312,-12.39412)" />
+    <text
+       class="dp-signal"
+       x="75.026909"
+       y="288.47488"
+       text-anchor="middle"
+       font-size="9px"
+       id="text42"
+       style="fill:#5796e2;fill-opacity:1"
+       data-uses="">PCSrc</text>
+  </g>
+  <!-- PC register -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pc"
+     transform="translate(57.622213,-0.53033009)">
+    <rect
+       x="80"
+       y="215"
+       width="42"
+       height="40"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect42" />
+    <text
+       x="101"
+       y="240"
+       text-anchor="middle"
+       font-size="14px"
+       font-weight="500"
+       id="text43">PC</text>
+  </g>
+  <!-- PC+4 adder -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-pc4"
+     transform="translate(53,-12.5)">
+    <text
+       x="125.74316"
+       y="153.17871"
+       text-anchor="middle"
+       font-size="14px"
+       id="text44-4"
+       style="fill:#e8eaed">+4</text>
+  </g>
+  <!-- Instruction Memory -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-im">
+    <rect
+       x="240"
+       y="200"
+       width="90"
+       height="70"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect44" />
+    <text
+       x="285"
+       y="230"
+       text-anchor="middle"
+       font-size="11"
+       id="text45">Instruction</text>
+    <text
+       x="285"
+       y="246"
+       text-anchor="middle"
+       font-size="11"
+       id="text46">Memory</text>
+    <text
+       x="248"
+       y="263"
+       font-size="9"
+       fill="var(--text3)"
+       id="text47">Read addr</text>
+  </g>
+  <!-- Register File -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jr,jal"
+     id="b-rf">
+    <rect
+       x="420"
+       y="200"
+       width="130"
+       height="140"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect47" />
+    <text
+       x="483.5"
+       y="271.5"
+       text-anchor="middle"
+       font-size="11px"
+       id="text48">Register</text>
+    <text
+       x="483.5"
+       y="287.5"
+       text-anchor="middle"
+       font-size="11px"
+       id="text49">File</text>
+    <text
+       x="424"
+       y="219"
+       font-size="9"
+       fill="var(--text3)"
+       id="text50">Read1</text>
+    <text
+       x="424"
+       y="249"
+       font-size="9"
+       fill="var(--text3)"
+       id="text51">Read2</text>
+    <text
+       x="424"
+       y="285"
+       font-size="9"
+       fill="var(--text3)"
+       id="text52">WrReg</text>
+    <text
+       x="424"
+       y="324"
+       font-size="9"
+       fill="var(--text3)"
+       id="text53">WrData</text>
+    <text
+       x="545.11609"
+       y="255.71751"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text55">ReadData2</text>
+    <text
+       x="544.92139"
+       y="221.33789"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text55-2"
+       style="fill:#e8eaed">ReadData1</text>
+  </g>
+  <!-- RegDst mux (left of RF Write Reg port) -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,jal"
+     id="b-regdst-mux"
+     transform="translate(14.156855,-3.5000002)">
+    <polygon
+       points="400,275 400,290 380,300 380,265 "
+       stroke-width="1.5"
+       id="polygon55"
+       transform="matrix(0.97875227,0,0,1.5161661,8.1616145,-142.31693)" />
+    <text
+       class="dp-signal"
+       x="391.36874"
+       y="256.62503"
+       text-anchor="middle"
+       font-size="7px"
+       id="text56"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.33333px;font-family:'DM Mono', Consolas, monospace;-inkscape-font-specification:'DM Mono, Consolas, monospace, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:middle;fill:#60a5fa;fill-opacity:1">RegDst</text>
+  </g>
+  <!-- Sign-Extend -->
+  <g
+     class="dp-block"
+     data-uses="addi,lw,sw,beq,bne"
+     id="b-signext"
+     transform="translate(-45.5,11.5)">
+    <rect
+       x="548.5"
+       y="353"
+       width="80"
+       height="30"
+       rx="14"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect56" />
+    <text
+       x="588.5"
+       y="372"
+       text-anchor="middle"
+       font-size="11px"
+       id="text57">Sign-Extend</text>
+  </g>
+  <!-- Shift <<2 (branch path) -->
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-shl2">
+    <rect
+       x="580"
+       y="100"
+       width="70"
+       height="24"
+       rx="12"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect57" />
+    <text
+       x="615"
+       y="116"
+       text-anchor="middle"
+       font-size="10"
+       id="text58">Shift &lt;&lt;2</text>
+  </g>
+  <!-- Branch Adder -->
+  <!-- ALUSrc Mux -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     id="b-alusrc-mux"
+     transform="translate(1.5998737,8.5324856)">
+    <polygon
+       points="640,265 620,275 620,230 640,240 "
+       stroke-width="1.5"
+       id="polygon60" />
+  </g>
+  <!-- ALU -->
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     id="b-alu"
+     transform="translate(-0.35355339,-7.7781746)">
+    <polygon
+       points="735,235 735,265 665,285 665,260 675,250 665,240 665,215 "
+       stroke-width="1.5"
+       id="polygon61" />
+    <text
+       x="692.5"
+       y="253"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62">ALU</text>
+    <text
+       x="789.02838"
+       y="221.40044"
+       font-size="6.90003px"
+       fill="var(--text3)"
+       id="text63"
+       transform="scale(0.91001738,1.0988801)"
+       style="stroke-width:0.76667">zero</text>
+    <text
+       x="782.08606"
+       y="237.36488"
+       font-size="6.90003px"
+       fill="var(--text3)"
+       id="text63-1"
+       style="fill:#e8eaed;stroke-width:0.76667"
+       transform="scale(0.91001738,1.0988801)">result</text>
+  </g>
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-alu-1"
+     transform="translate(26.749997,-155.00571)">
+    <polygon
+       points="735,265 665,285 665,260 675,250 665,240 665,215 735,235 "
+       stroke-width="1.5"
+       id="polygon61-8" style="stroke-width:1.5" />
+    <text
+       x="688"
+       y="254"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62-9"
+       style="fill:#e8eaed">ADD</text>
+    <text
+       x="682.42633"
+       y="262.7254"
+       font-size="7.12114px"
+       fill="var(--text3)"
+       id="text63-1-7"
+       style="fill:#e8eaed;stroke-width:0.791238"
+       transform="scale(1.0390894,0.96238111)">result</text>
+  </g>
+  <g
+     class="dp-block"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne,jal"
+     id="b-alu-1-1"
+     transform="matrix(0.87262178,0,0,1.0016005,-372.08524,-94.905822)">
+    <polygon
+       points="665,240 665,215 735,235 735,265 665,285 665,260 675,250 "
+       stroke-width="1.5"
+       id="polygon61-8-1" style="stroke-width:1.5" />
+    <text
+       x="688"
+       y="254"
+       text-anchor="middle"
+       font-size="13px"
+       id="text62-9-3"
+       style="fill:#e8eaed">ADD</text>
+    <text
+       x="682.42633"
+       y="262.7254"
+       font-size="7.12114px"
+       fill="var(--text3)"
+       id="text63-1-7-8"
+       style="fill:#e8eaed;stroke-width:0.791238"
+       transform="scale(1.0390894,0.96238111)">result</text>
+  </g>
+  <polygon
+     class="dp-block"
+     points="665,260 675,250 665,240 665,215 735,235 735,265 665,285 "
+     stroke-width="1.5"
+     id="polygon61-8-1-0"
+     data-uses="j,jal" style="stroke-width:1.5"
+     transform="matrix(-1.0983609,0,0,0.99883708,873.58768,159.17317)" />
+  <text
+     class="dp-block"
+     x="121.06536"
+     y="385.38864"
+     text-anchor="middle"
+     font-size="12.1536px"
+     id="text62-9-3-0"
+     style="fill:#e8eaed;stroke-width:0.934889"
+     transform="scale(0.93339561,1.0713571)"
+     data-uses="jal,j">CONCAT</text>
+  <text
+     class="dp-block"
+     x="69.881027"
+     y="398.64246"
+     font-size="6.65748px"
+     fill="var(--text3)"
+     id="text63-1-7-8-6"
+     data-uses="j,jal"
+     style="fill:#e8eaed;stroke-width:0.73972"
+     transform="scale(0.96988149,1.0310538)">result</text>
+  <!-- AND gate -->
+  <g
+     class="dp-block"
+     data-uses="beq,bne"
+     id="b-and">
+    <path
+       d="m 809.5933,124.09567 h 19.1737 a 15.338956,15.872441 0 0 1 0,23.80866 h -19.1737 z"
+       stroke-width="1.5"
+       id="path63" />
+    <text class="dp-block"
+       x="821.25"
+       y="134"
+       text-anchor="middle"
+       font-size="9px"
+       id="text64"
+       data-uses="beq">AND</text>
+    <text class="dp-block"
+       x="821.54541"
+       y="143.54346"
+       text-anchor="middle"
+       font-size="9px"
+       id="text64-8"
+       style="fill:#e8eaed"
+       data-uses="bne">NAND</text>
+  </g>
+  <path
+     class="dp-wire"
+     data-uses="sw"
+     d="m 927.75,324.93629 v -6.75"
+     id="path31-2-8" style="stroke-width:1.5" />
+  <!-- Data Memory -->
+  <g
+     class="dp-block"
+     data-uses="lw,sw"
+     id="b-dm">
+    <rect
+       x="882.49493"
+       y="238.41422"
+       width="90"
+       height="80"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect64" />
+    <text
+       x="924.99493"
+       y="272.91422"
+       text-anchor="middle"
+       font-size="11px"
+       id="text65">Data</text>
+    <text
+       x="925.99493"
+       y="287.91422"
+       text-anchor="middle"
+       font-size="11px"
+       id="text66">Memory</text>
+    <text
+       x="888.99493"
+       y="253.41422"
+       font-size="9px"
+       fill="var(--text3)"
+       id="text67">Addr</text>
+    <text
+       x="888.49493"
+       y="313.41422"
+       font-size="9px"
+       fill="var(--text3)"
+       id="text68">Write Data</text>
+    <text
+       x="966.49493"
+       y="284.66422"
+       font-size="9px"
+       fill="var(--text3)"
+       text-anchor="end"
+       id="text69">D</text>
+  </g>
+  <!-- MemtoReg Mux -->
+  <g
+     class="dp-block"
+     data-uses=""
+     id="b-memtoreg-mux"
+     data-always="true"
+     transform="translate(9.1249999,-6.8750001)">
+    <polygon
+       class="dp-block"
+       points="920,242 920,272 900,282 900,232 "
+       stroke-width="1.5"
+       id="polygon69"
+       data-uses="add,sub,and,or,slt,addi,lw"
+       transform="translate(95.994949,22.914214)" />
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline"
+       transform="matrix(1.5954736,0,0,1.7388972,-447.20387,-179.18026)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt,addi"><tspan
+         x="910"
+         y="261"
+         id="tspan1">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-446.78017,-161.60315)"
+       xml:space="preserve"
+       data-uses="lw"><tspan
+         x="910"
+         y="261"
+         id="tspan2">1</tspan></text>
+    <text
+       xml:space="preserve"
+       id="text83"
+       style="writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect83);display:inline;fill:#000000" />
+    <text
+       xml:space="preserve"
+       style="writing-mode:lr-tb;direction:ltr;fill:#000000"
+       x="923.11505"
+       y="235.75273"
+       id="text84"><tspan
+         id="tspan84"
+         x="923.11505"
+         y="235.75273" /></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-833.07799,-190.074)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt,beq,bne"><tspan
+         x="910"
+         y="261"
+         id="tspan3">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.5954736,0,0,1.7388972,-832.90429,-173.24689)"
+       xml:space="preserve"
+       data-uses="addi,lw,sw"><tspan
+         x="910"
+         y="261"
+         id="tspan4">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-642.15204,-43.715414)"
+       xml:space="preserve"
+       data-uses="addi,lw"><tspan
+         x="910"
+         y="261"
+         id="tspan5">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-4"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.63561,-104.21408)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,addi,slt,lw,sw"><tspan
+         x="910"
+         y="261"
+         id="tspan6">0</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-4-5"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.26061,-48.21408)"
+       xml:space="preserve"
+       data-uses="jal,j"><tspan
+         x="910"
+         y="261"
+         id="tspan7">3</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.38561,-86.589079)"
+       xml:space="preserve"
+       data-uses="jr"><tspan
+         x="910"
+         y="261"
+         id="tspan8">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-6-6-9-0"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-975.26061,-68.214079)"
+       xml:space="preserve"
+       data-uses="bne,beq"><tspan
+         x="910"
+         y="261"
+         id="tspan9">2</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1-6"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-642.10186,-30.839301)"
+       xml:space="preserve"
+       data-uses="add,sub,and,or,slt"><tspan
+         x="910"
+         y="261"
+         id="tspan10">1</tspan></text>
+    <text
+       class="dp-block"
+       x="910"
+       y="261"
+       text-anchor="middle"
+       font-size="7px"
+       id="text70-9-1-6-9"
+       style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+       transform="matrix(1.1335187,0,0,1.2410243,-641.90004,-18.320121)"
+       xml:space="preserve"
+       data-uses="jal"><tspan
+         x="910"
+         y="261"
+         id="tspan11">2</tspan></text>
+  </g>
+  <!-- ===== Jump path components ===== -->
+  <!-- Concat: combines PC[31:28] (4 bits) + Shift<<2 output (28 bits) → 32-bit jump target -->
+  <g
+     class="dp-block"
+     data-uses="j,jal"
+     id="b-concat"
+     transform="translate(-1.0025253,296.47918)">
+    <rect
+       x="179"
+       y="76.5"
+       width="80"
+       height="22"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect70" />
+    <text
+       x="218"
+       y="90.5"
+       text-anchor="middle"
+       font-size="10px"
+       id="text71">Concat</text>
+    <text
+       x="219.5"
+       y="113.5"
+       text-anchor="middle"
+       font-size="8px"
+       fill="var(--text3)"
+       id="text72">4+28→32</text>
+  </g>
+  <!-- Shift<<2 (jump): takes 26-bit address from inst[25:0], outputs 28 bits -->
+  <g
+     class="dp-block"
+     data-uses="j,jal"
+     id="b-shl2-jump"
+     transform="translate(-89.634773,348.45782)">
+    <rect
+       x="285"
+       y="72"
+       width="55"
+       height="22"
+       rx="11"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect72" />
+    <text
+       x="312"
+       y="87"
+       text-anchor="middle"
+       font-size="10px"
+       id="text73">&lt;&lt;2</text>
+  </g>
+  <!-- Control Unit -->
+  <g
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     id="b-control">
+    <rect
+       x="420"
+       y="463"
+       width="140"
+       height="30"
+       rx="3"
+       fill="var(--bg3)"
+       stroke="var(--border2)"
+       stroke-width="1.5"
+       id="rect73" />
+    <text
+       x="490"
+       y="482"
+       text-anchor="middle"
+       font-size="11"
+       id="text74">Control Unit</text>
+  </g>
+  <!-- ============================================================ -->
+  <!-- CONTROL SIGNAL LABELS (visible only when relevant)           -->
+  <!-- Spread out so they never collide with each other or blocks   -->
+  <!-- ============================================================ -->
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,addi,slt,lw,jal"
+     x="485"
+     y="195"
+     text-anchor="middle"
+     id="text75">RegWrite</text>
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,lw,sw,addi,slt,beq,bne"
+     x="631"
+     y="233.5"
+     text-anchor="middle"
+     id="text76">ALUSrc</text>
+  <polygon
+     class="dp-block"
+     points="640,240 640,265 620,275 620,230 "
+     stroke-width="1.5"
+     id="polygon60-6" style="stroke-width:1.5"
+     transform="translate(218.4908,-169.65378)"
+     data-uses="beq,bne" />
+  <text
+     class="dp-block"
+     x="910"
+     y="261"
+     text-anchor="middle"
+     font-size="7px"
+     id="text70-6-4"
+     style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+     transform="matrix(1.5954736,0,0,1.7388972,-604.18706,-374.38527)"
+     xml:space="preserve"
+     data-uses="beq,bne"><tspan
+       x="910"
+       y="261"
+       id="tspan12">0</tspan></text>
+  <text
+     class="dp-block"
+     x="910"
+     y="261"
+     text-anchor="middle"
+     font-size="7px"
+     id="text70-9-1-2"
+     style="direction:rtl;white-space:pre;inline-size:42.7705;display:inline;fill:#e8eaed"
+     transform="matrix(1.5954736,0,0,1.7388972,-604.01336,-359.55816)"
+     xml:space="preserve"
+     data-uses="bne,beq"><tspan
+       x="910"
+       y="261"
+       id="tspan13">1</tspan></text>
+  <text
+     class="dp-signal"
+     data-uses="lw"
+     x="927.83984"
+     y="232"
+     text-anchor="middle"
+     id="text77">MemRead</text>
+  <text
+     class="dp-signal"
+     data-uses="sw"
+     x="927.57208"
+     y="333.59619"
+     text-anchor="middle"
+     id="text78">MemWrite</text>
+  <text
+     class="dp-signal"
+     data-uses="lw"
+     x="1018.2224"
+     y="243.68811"
+     text-anchor="middle"
+     id="text79">MemtoReg</text>
+  <text
+     class="dp-signal"
+     data-uses="beq,bne"
+     x="824"
+     y="118"
+     text-anchor="middle"
+     id="text80">Branch?</text>
+  <text
+     class="dp-signal"
+     data-uses="add,sub,and,or,slt,addi,lw,sw,beq,bne"
+     x="711.5"
+     y="277"
+     text-anchor="middle"
+     id="text81">ALUOp</text>
+  <!-- Footer hint -->
+  <text
+     x="490"
+     y="455"
+     text-anchor="middle"
+     fill="var(--text3)"
+     font-size="10"
+     font-family="DM Mono, monospace"
+     id="text82">8 control signals → blocks above</text>
+  <text
+     xml:space="preserve"
+     style="writing-mode:lr-tb;direction:rtl;fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-opacity:1"
+     x="723.5"
+     y="302"
+     id="text85"><tspan
+       id="tspan85" /></text>
+  <text
+     xml:space="preserve"
+     id="text86"
+     style="writing-mode:lr-tb;direction:rtl;white-space:pre;shape-inside:url(#rect86);display:inline;fill:#60a5fa;fill-opacity:1;stroke:#60a5fa;stroke-opacity:1" />
+  <g
+     id="svg82-7"
+     transform="matrix(0.97723949,0,0,1.85538,7.4686577,-225.95192)" />
+  <circle
+     class="dp-block"
+     data-always="true"
+     data-uses=""
+     cx="339.5"
+     cy="156.75"
+     r="3"
+     fill="#9aa0a6"
+     id="circle4-5" />
+      </svg>
+      <div class="dp-svg-legend">
+        <span><span class="swatch active"></span>active for selected instructions</span>
+        <span><span class="swatch dimmed"></span>not used by your selection</span>
+      </div>
+      <!-- Debug inspector: appears when Debug mode is on. Shows the hovered element's
+           id and data-uses tag, plus a quick-reference list of every wire/block grouped
+           by data-uses tag so mistagged elements stand out. -->
+      <div id="dp-debug-panel" style="display:none;">
+        <div class="dp-debug-row">
+          <span class="dp-debug-label">HOVERED:</span>
+          <span id="dp-debug-id" class="dp-debug-mono">(move mouse over a wire or block)</span>
+          <span id="dp-debug-uses" class="dp-debug-mono"></span>
+        </div>
+        <div class="dp-debug-row" style="border-top:1px solid var(--border); margin-top:6px; padding-top:6px;">
+          <span class="dp-debug-label">EXPECTED (per data.js):</span>
+          <span id="dp-debug-expected" class="dp-debug-mono">select one instruction to see its expected blocks</span>
+        </div>
+        <div class="dp-debug-row" style="margin-top:6px;">
+          <span class="dp-debug-label">TIP:</span>
+          <span class="dp-debug-mono" style="color:var(--text3);">single-segment paths that serve multiple instructions need to be split in Inkscape; tags can be edited in [dashboard/cpe315-datapath-layout-manual.svg](dashboard/cpe315-datapath-layout-manual.svg) and we re-splice.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-grid">
+      <div class="dp-panel">
+        <div class="dp-panel-title">Control Signals (per instruction)</div>
+        <div id="dp-control-table"></div>
+      </div>
+      <div class="dp-panel">
+        <div class="dp-panel-title">Component Activation</div>
+        <div id="dp-component-table"></div>
+      </div>
+    </div>
+
+    <div class="dp-panel">
+      <div class="dp-panel-title">Per-Instruction Detail (click to expand)</div>
+      <div id="dp-cards" class="dp-cards"></div>
+    </div>
+  </div><!-- /dp-app -->
+
+  <div class="footer">
+    <span>MIPS Single-Cycle Visualizer</span>
+    <span><a href="https://github.com/aihobbss/mips-single-cycle-visualizer" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">source on GitHub</a> · MIT licensed</span>
+  </div>
+
+</div>
+
+<script src="cpe315-datapath-data.js"></script>
+<script>
+// ============================================================
+// BOOTSTRAP
+// ============================================================
+// Single-page app: wire initDatapath() to DOMContentLoaded. The function
+// internally reads ?i=lw,add etc. from the URL for deep-linkable preselection.
+document.addEventListener('DOMContentLoaded', initDatapath);
+
+// ============================================================
+// CPE 315 DATAPATH BUILDER
+// ============================================================
+const dpState = { selected: new Set() };
+
+function initDatapath() {
+  if (window.dpInitialized) return;
+  window.dpInitialized = true;
+
+  if (typeof DATAPATH_CPE315 === 'undefined') {
+    console.error('DATAPATH_CPE315 data not loaded');
+    return;
+  }
+
+  // URL deep-link: ?i=lw,add pre-selects those instructions (useful for sharing
+  // and for screenshot diffing).
+  const params = new URLSearchParams(window.location.search);
+  const iParam = params.get('i') || params.get('inst');
+  if (iParam) {
+    iParam.split(',').map(s => s.trim()).forEach(name => {
+      if (DATAPATH_CPE315.instructions[name]) dpState.selected.add(name);
+    });
+  }
+
+  renderDatapathChips();
+  renderDatapathPresets();
+  renderDatapathAll();
+
+  document.getElementById('dp-clear').addEventListener('click', () => {
+    dpState.selected.clear();
+    renderDatapathAll();
+  });
+  document.getElementById('dp-all').addEventListener('click', () => {
+    DATAPATH_CPE315.instructionOrder.forEach(i => dpState.selected.add(i));
+    renderDatapathAll();
+  });
+  document.getElementById('dp-presets').addEventListener('change', (e) => {
+    const preset = e.target.value;
+    if (!preset) return;
+    const list = DATAPATH_CPE315.presets[preset];
+    if (list) {
+      dpState.selected = new Set(list);
+      renderDatapathAll();
+    }
+    e.target.value = '';
+  });
+
+  // Debug mode: toggle hover-inspector on the SVG.
+  const dbgBtn = document.getElementById('dp-debug');
+  const dbgPanel = document.getElementById('dp-debug-panel');
+  const svg = document.getElementById('dp-svg');
+  const dbgId = document.getElementById('dp-debug-id');
+  const dbgUses = document.getElementById('dp-debug-uses');
+  const dbgExpected = document.getElementById('dp-debug-expected');
+  let debugOn = false;
+
+  dbgBtn.addEventListener('click', () => {
+    debugOn = !debugOn;
+    dbgBtn.classList.toggle('active', debugOn);
+    dbgPanel.style.display = debugOn ? 'block' : 'none';
+    svg.classList.toggle('debug-mode', debugOn);
+    renderDatapathDebugExpected();
+  });
+
+  // Hover inspector: anything with data-uses or an id starting with 'b-' shows info.
+  svg.addEventListener('mouseover', (e) => {
+    if (!debugOn) return;
+    let el = e.target;
+    // Walk up to find an element with data-uses or a known block id
+    while (el && el !== svg) {
+      if (el.hasAttribute && (el.hasAttribute('data-uses') || (el.id || '').startsWith('b-'))) {
+        break;
+      }
+      el = el.parentElement;
+    }
+    if (!el || el === svg) return;
+    const id = el.id || el.tagName.toLowerCase();
+    const uses = el.getAttribute('data-uses') || (el.dataset && el.dataset.always === 'true' ? '(always-on)' : '(none)');
+    const isActive = el.classList.contains('dp-active');
+    dbgId.innerHTML = `<span style="color:var(--info);">${id}</span>` +
+      (isActive ? ' <span style="color:var(--accent);">(lit)</span>' : ' <span style="color:var(--text3);">(dim)</span>');
+    dbgUses.innerHTML = `data-uses=<span style="color:var(--accent);">"${uses}"</span>`;
+  });
+}
+
+function renderDatapathDebugExpected() {
+  const dbgExpected = document.getElementById('dp-debug-expected');
+  if (!dbgExpected) return;
+  if (dpState.selected.size === 0) {
+    dbgExpected.innerHTML = '<span style="color:var(--text3);">select one instruction to see its expected blocks</span>';
+    return;
+  }
+  const lines = [];
+  const blockMeta = DATAPATH_CPE315.blocks;
+  for (const name of DATAPATH_CPE315.instructionOrder) {
+    if (!dpState.selected.has(name)) continue;
+    const inst = DATAPATH_CPE315.instructions[name];
+    const blocks = inst.blocks.map(b => blockMeta[b] ? blockMeta[b].label : b).join(' · ');
+    lines.push(`<span style="color:var(--accent);">${name}</span>: ${blocks}`);
+  }
+  dbgExpected.innerHTML = lines.join('<br>');
+}
+
+function renderDatapathChips() {
+  const wrap = document.getElementById('dp-chips');
+  wrap.innerHTML = DATAPATH_CPE315.instructionOrder.map(name => {
+    const inst = DATAPATH_CPE315.instructions[name];
+    return `<button class="dp-chip" data-inst="${name}">${name}<span class="dp-chip-fmt">${inst.format}</span></button>`;
+  }).join('');
+  wrap.querySelectorAll('.dp-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const name = chip.dataset.inst;
+      if (dpState.selected.has(name)) dpState.selected.delete(name);
+      else dpState.selected.add(name);
+      renderDatapathAll();
+    });
+  });
+}
+
+function renderDatapathPresets() {
+  const sel = document.getElementById('dp-presets');
+  Object.keys(DATAPATH_CPE315.presets).forEach(label => {
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
+
+function renderDatapathAll() {
+  document.querySelectorAll('#dp-chips .dp-chip').forEach(chip => {
+    chip.classList.toggle('selected', dpState.selected.has(chip.dataset.inst));
+  });
+  renderDatapathControlTable();
+  renderDatapathComponentTable();
+  renderDatapathCards();
+  updateDatapathDiagram();
+  if (typeof renderDatapathDebugExpected === 'function') renderDatapathDebugExpected();
+}
+
+function renderDatapathControlTable() {
+  const root = document.getElementById('dp-control-table');
+  if (dpState.selected.size === 0) {
+    root.innerHTML = '<div class="dp-empty">Pick one or more instructions above to see their control signals.</div>';
+    return;
+  }
+  const sigs = DATAPATH_CPE315.signalOrder;
+  const sigMeta = DATAPATH_CPE315.controlSignals;
+  const order = DATAPATH_CPE315.instructionOrder.filter(n => dpState.selected.has(n));
+  const head = `<tr><th>Instr</th>${sigs.map(s => `<th title="${sigMeta[s].description}">${s}</th>`).join('')}</tr>`;
+  const rows = order.map(name => {
+    const inst = DATAPATH_CPE315.instructions[name];
+    const cells = sigs.map(sig => {
+      const v = inst.controls[sig];
+      let cls = 'dp-cell-X';
+      if (v === 1) cls = 'dp-cell-1';
+      else if (v === 0) cls = 'dp-cell-0';
+      else if (v === 'X') cls = 'dp-cell-X';
+      else cls = 'dp-cell-op';
+      const tip = sigMeta[sig] && sigMeta[sig].values && sigMeta[sig].values[v]
+        ? sigMeta[sig].values[v] : sigMeta[sig].description;
+      return `<td class="${cls}" title="${tip}">${v}</td>`;
+    }).join('');
+    return `<tr><td>${name}</td>${cells}</tr>`;
+  }).join('');
+  root.innerHTML = `<table class="dp-table"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderDatapathComponentTable() {
+  const root = document.getElementById('dp-component-table');
+  if (dpState.selected.size === 0) {
+    root.innerHTML = '<div class="dp-empty">Pick instructions to see which functional blocks are needed.</div>';
+    return;
+  }
+  const blocks = DATAPATH_CPE315.blockOrder;
+  const blockMeta = DATAPATH_CPE315.blocks;
+  const order = DATAPATH_CPE315.instructionOrder.filter(n => dpState.selected.has(n));
+  // For RF write port specifically, derive from controls.RegWrite=1
+  const usesBlock = (name, blockId) => {
+    const inst = DATAPATH_CPE315.instructions[name];
+    if (blockMeta[blockId].alwaysOn) return true;
+    if (blockId === 'rf_write') return inst.controls.RegWrite === 1;
+    return inst.blocks.includes(blockId);
+  };
+  const head = `<tr><th>Block</th>${order.map(n => `<th>${n}</th>`).join('')}<th style="color:var(--accent);">Combined</th></tr>`;
+  const rows = blocks.map(b => {
+    const cells = order.map(n => {
+      const yes = usesBlock(n, b);
+      return `<td class="${yes ? 'dp-cell-yes' : 'dp-cell-no'}">${yes ? '✓' : '·'}</td>`;
+    }).join('');
+    const anyUse = blockMeta[b].alwaysOn || order.some(n => usesBlock(n, b));
+    const combinedCell = `<td class="${anyUse ? 'dp-cell-yes' : 'dp-cell-no'}">${anyUse ? '✓' : '·'}</td>`;
+    const rowClass = blockMeta[b].alwaysOn ? 'dp-row-always' : '';
+    return `<tr class="${rowClass}"><td>${blockMeta[b].label}</td>${cells}${combinedCell}</tr>`;
+  }).join('');
+  root.innerHTML = `<table class="dp-table"><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderDatapathCards() {
+  const root = document.getElementById('dp-cards');
+  if (dpState.selected.size === 0) {
+    root.innerHTML = '<div class="dp-empty">No instructions selected.</div>';
+    return;
+  }
+  const order = DATAPATH_CPE315.instructionOrder.filter(n => dpState.selected.has(n));
+  const blockMeta = DATAPATH_CPE315.blocks;
+  root.innerHTML = order.map(name => {
+    const inst = DATAPATH_CPE315.instructions[name];
+    const blockNames = inst.blocks.map(b => blockMeta[b].label).join(' · ');
+    return `
+      <div class="dp-card" data-inst="${name}">
+        <div class="dp-card-head">
+          <span class="dp-card-arrow">▸</span>
+          <span class="dp-card-name">${name}</span>
+          <span class="dp-card-syntax">${inst.syntax}</span>
+          <span class="dp-card-fmt">${inst.format}-format</span>
+        </div>
+        <div class="dp-card-body">
+          <div class="dp-card-row"><span class="lbl">Encoding</span><span class="val">${inst.encoding}</span></div>
+          <div class="dp-card-row"><span class="lbl">Semantics</span><span class="val">${inst.semantics}</span></div>
+          <div class="dp-card-row"><span class="lbl">Blocks</span><span class="val">${blockNames}</span></div>
+        </div>
+      </div>`;
+  }).join('');
+  root.querySelectorAll('.dp-card-head').forEach(head => {
+    head.addEventListener('click', () => head.parentElement.classList.toggle('open'));
+  });
+}
+
+function updateDatapathDiagram() {
+  const sel = dpState.selected;
+  const noSelection = sel.size === 0;
+  document.querySelectorAll('#dp-svg [data-uses]').forEach(el => {
+    let active;
+    if (noSelection) {
+      // Nothing selected → diagram is fully dim at rest.
+      active = false;
+    } else if (el.dataset.always === 'true') {
+      // Always-on elements light up the moment any instruction is selected.
+      active = true;
+    } else {
+      const uses = (el.dataset.uses || '').split(',').filter(Boolean);
+      active = uses.some(i => sel.has(i));
+    }
+    el.classList.toggle('dp-active', active);
+    el.classList.toggle('dp-dimmed', !active);
+  });
+
+  // Mux select-signal title + line: light ONLY when >=2 of the mux's input
+  // paths are active. A single instruction lights just one input, so the
+  // "which input?" select signal is irrelevant and stays off; with 2+ inputs
+  // lit the mux is actually choosing, so the signal title/line lights up.
+  const MUX_SIGNALS = [
+    { els: ['text42', 'path31-2-3-0'], inputs: ['path3', 'path41', 'path39', 'path13-6-3-4'] },
+    { els: ['text56', 'path31-2-3'],   inputs: ['path7-9', 'path11', 'path11-8'] },
+    { els: ['text76', 'path31-2'],     inputs: ['path29-2', 'path22'] },
+    { els: ['text79', 'path31-2-8-7'], inputs: ['path34', 'path35'] },
+  ];
+  MUX_SIGNALS.forEach(m => {
+    const lit = m.inputs.reduce((c, id) => {
+      const e = document.getElementById(id);
+      return c + (e && e.classList.contains('dp-active') ? 1 : 0);
+    }, 0);
+    const on = !noSelection && lit >= 2;
+    m.els.forEach(id => {
+      const e = document.getElementById(id);
+      if (e) { e.classList.toggle('dp-active', on); e.classList.toggle('dp-dimmed', !on); }
+    });
+  });
+}
+
+
+</script>
+</body>
+</html>

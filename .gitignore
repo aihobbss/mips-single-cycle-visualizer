@@ -1,0 +1,10 @@
+.vercel
+.DS_Store
+Thumbs.db
+*.bak
+*.swp
+node_modules
+.idea
+.vscode
+__pycache__
+*.pyc
