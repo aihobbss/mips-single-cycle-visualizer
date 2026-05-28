@@ -5,26 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MIPS Single-Cycle Visualizer</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap');
 
   :root {
-    --bg: #0e0f11;
-    --bg2: #161719;
-    --bg3: #1e2023;
-    --border: #2a2d31;
-    --border2: #363a3f;
-    --text: #e8eaed;
-    --text2: #9aa0a6;
-    --text3: #5f6368;
-    --accent: #4ade80;
+    --bg: #0d0e10;          /* deepened paper-of-night */
+    --bg2: #15171a;
+    --bg3: #1c1f23;
+    --bg-elev: #20242a;     /* hover surfaces */
+    --border: #2a2d32;
+    --border2: #3a3e44;
+    --text: #ebedef;
+    --text2: #a4a9b0;
+    --text3: #6b7178;
+    --accent: #4ade80;      /* leave alone — drives SVG active wire color */
     --accent2: #22c55e;
+    --accent-bg: rgba(74, 222, 128, 0.10);
     --warn: #fbbf24;
     --danger: #f87171;
     --info: #60a5fa;
     --purple: #a78bfa;
     --teal: #2dd4bf;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, 'Consolas', monospace;
+    --sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --radius:    10px;
+    --radius-sm: 6px;
+    --t-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+    --t-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20);
+    --shadow:    0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.25);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,8 +43,17 @@
     color: var(--text);
     font-family: var(--sans);
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.55;
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 
   /* Right-now card */
@@ -143,10 +161,12 @@
 
   /* Top bar */
   .topbar {
-    background: var(--bg2);
+    background: rgba(21, 23, 26, 0.85);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
     border-bottom: 1px solid var(--border);
     padding: 0 28px;
-    height: 52px;
+    height: 56px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -154,18 +174,32 @@
     top: 0;
     z-index: 100;
   }
-  .topbar-left { display: flex; align-items: center; gap: 16px; }
-  .logo { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--accent); letter-spacing: 0.04em; }
-  .quarter-badge {
-    font-family: var(--mono); font-size: 11px; color: var(--text3);
-    background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
-    padding: 2px 8px;
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    font-family: var(--serif);
+    font-size: 16px; font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
   }
-  .topbar-right { font-family: var(--mono); font-size: 11px; color: var(--text3); }
-  #live-time { color: var(--text2); }
+  .quarter-badge {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    border: 1px solid rgba(74, 222, 128, 0.30);
+    border-radius: 4px;
+    padding: 3px 9px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .topbar-right { font-family: var(--mono); font-size: 11.5px; }
+  .topbar-right a {
+    color: var(--text3);
+    text-decoration: none;
+    transition: color var(--t-fast);
+  }
+  .topbar-right a:hover { color: var(--accent); }
 
   /* Layout */
-  .main { padding: 24px 28px; max-width: 1200px; }
+  .main { padding: 28px 28px 80px; max-width: 1240px; margin: 0 auto; }
 
   /* Section labels */
   .section-label {
@@ -466,81 +500,153 @@
   /* ===== CPE 315 Datapath Builder ===== */
   .dp-header {
     display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 14px;
   }
-  .dp-title { font-size: 20px; font-weight: 500; }
-  .dp-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+  .dp-title {
+    font-family: var(--serif);
+    font-size: 26px; font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .dp-subtitle {
+    font-size: 12.5px; color: var(--text3);
+    margin-top: 6px; font-family: var(--mono);
+  }
 
   .dp-controls {
-    display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
     background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px; margin-bottom: 16px;
+    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 18px;
+    box-shadow: var(--shadow-sm);
   }
   .dp-section-label {
-    font-family: var(--mono); font-size: 11px; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.05em;
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+    color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.08em;
   }
   .dp-chips {
-    display: flex; gap: 6px; flex-wrap: wrap;
+    display: flex; gap: 7px; flex-wrap: wrap;
   }
   .dp-chip {
-    background: var(--bg3); color: var(--text2); border: 1px solid var(--border);
-    padding: 6px 12px; border-radius: 16px; font-family: var(--mono);
-    font-size: 12px; cursor: pointer; transition: all 0.12s;
-    user-select: none;
+    background: var(--bg3); color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 6px 13px; border-radius: 999px;
+    font-family: var(--mono); font-size: 12.5px; font-weight: 500;
+    cursor: pointer; user-select: none;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: background var(--t-fast), color var(--t-fast),
+                border-color var(--t-fast), box-shadow var(--t-fast),
+                transform var(--t-fast);
   }
-  .dp-chip:hover { border-color: var(--border2); color: var(--text); }
+  .dp-chip:hover {
+    border-color: var(--border2);
+    color: var(--text);
+    background: var(--bg-elev);
+  }
+  .dp-chip:active { transform: translateY(1px); }
   .dp-chip.selected {
-    background: rgba(74,222,128,0.12); color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: rgba(74, 222, 128, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.18);
+  }
+  .dp-chip.selected:hover {
+    background: rgba(74, 222, 128, 0.16);
     border-color: var(--accent);
   }
   .dp-chip .dp-chip-fmt {
-    margin-left: 6px; font-size: 9px; color: var(--text3); opacity: 0.7;
+    font-size: 9px; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.06em;
   }
-  .dp-chip.selected .dp-chip-fmt { color: var(--accent); opacity: 0.7; }
+  .dp-chip.selected .dp-chip-fmt {
+    color: var(--accent); opacity: 0.7;
+  }
 
   .dp-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
   .dp-actions button, .dp-actions select {
-    background: var(--bg3); color: var(--text); border: 1px solid var(--border);
-    padding: 6px 10px; border-radius: 6px; font-family: var(--sans);
-    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    background: var(--bg3); color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 7px 12px; border-radius: var(--radius-sm);
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast),
+                border-color var(--t-fast), transform var(--t-fast);
   }
   .dp-actions button:hover, .dp-actions select:hover {
-    border-color: var(--accent); color: var(--accent);
+    background: var(--bg-elev);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .dp-actions button:active { transform: translateY(1px); }
+  #dp-debug.active {
+    background: var(--accent); color: var(--bg);
+    border-color: var(--accent);
   }
 
   .dp-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    display: grid; grid-template-columns: 1fr; gap: 16px;
     margin-bottom: 16px;
   }
-  @media (max-width: 1100px) { .dp-grid { grid-template-columns: 1fr; } }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 0 16px; height: 50px; }
+    .logo { font-size: 14px; }
+    .main { padding: 18px 16px 60px; }
+    .dp-title { font-size: 22px; }
+    .dp-controls { padding: 12px 14px; gap: 10px; }
+    .dp-chip { padding: 5px 11px; font-size: 12px; }
+    .dp-panel { padding: 14px 14px; }
+    .dp-actions { margin-left: 0; width: 100%; justify-content: flex-start; }
+  }
 
   .dp-panel {
     background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 16px;
+    border-radius: var(--radius); padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
   }
   .dp-panel-title {
-    font-family: var(--mono); font-size: 11px; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;
+    font-family: var(--serif); font-size: 14.5px; font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .dp-panel-title::before {
+    content: ""; display: inline-block;
+    width: 3px; height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
   }
 
   .dp-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
   .dp-table th, .dp-table td {
-    padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border);
+    padding: 8px 10px; text-align: center; border-bottom: 1px solid var(--border);
   }
   .dp-table th {
     color: var(--text3); font-weight: 500; font-size: 10px;
-    text-transform: uppercase; letter-spacing: 0.04em;
+    text-transform: uppercase; letter-spacing: 0.07em;
     cursor: help;
+    border-bottom: 1px solid var(--border2);
   }
   .dp-table td:first-child, .dp-table th:first-child {
-    text-align: left; color: var(--text); font-weight: 500;
+    text-align: left; color: var(--text); font-weight: 600;
   }
+  .dp-table tbody tr { transition: background var(--t-fast); }
+  .dp-table tbody tr:hover { background: var(--bg3); }
   .dp-table tr:last-child td { border-bottom: none; }
 
   .dp-cell-1 { color: var(--accent); font-weight: 500; }
   .dp-cell-0 { color: var(--danger); }
   .dp-cell-X { color: var(--text3); opacity: 0.5; }
+  /* Multi-state control values (mux selects, branch logic) — dark-theme tints */
+  .dp-table td.dp-cell-2    { color: var(--purple); font-weight: 500; }
+  .dp-table td.dp-cell-3    { color: var(--teal);   font-weight: 500; }
+  .dp-table td.dp-cell-AND  { color: var(--info);   font-weight: 500; }
+  .dp-table td.dp-cell-NAND { color: #f472b6;       font-weight: 500; }
   .dp-cell-op { color: var(--info); font-weight: 500; }
   .dp-cell-yes { color: var(--accent); font-weight: 500; }
   .dp-cell-no { color: var(--text3); opacity: 0.4; }
@@ -557,15 +663,18 @@
   /* Per-instruction expandable cards */
   .dp-cards { display: flex; flex-direction: column; gap: 8px; }
   .dp-card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
-    overflow: hidden;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: border-color var(--t-fast), box-shadow var(--t-fast);
   }
+  .dp-card:hover { border-color: var(--border2); }
+  .dp-card.open { border-color: var(--border2); box-shadow: var(--shadow-sm); }
   .dp-card-head {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; cursor: pointer; user-select: none;
-    background: var(--bg2); transition: background 0.12s;
+    padding: 11px 16px; cursor: pointer; user-select: none;
+    transition: background var(--t-fast);
   }
-  .dp-card-head:hover { background: var(--bg3); }
+  .dp-card-head:hover { background: var(--bg-elev); }
   .dp-card-name { font-family: var(--mono); font-size: 14px; color: var(--accent); font-weight: 500; }
   .dp-card-syntax { font-family: var(--mono); font-size: 12px; color: var(--text2); }
   .dp-card-fmt {
@@ -685,9 +794,7 @@
       <span class="dp-section-label">Instructions:</span>
       <div class="dp-chips" id="dp-chips"></div>
       <div class="dp-actions">
-        <select id="dp-presets">
-          <option value="">Common pairs…</option>
-        </select>
+
         <button id="dp-clear">Clear all</button>
         <button id="dp-all">Select all</button>
         <button id="dp-debug" title="Hover any wire or block to see its data-uses tag">Debug</button>
@@ -2089,7 +2196,7 @@
         </div>
         <div class="dp-debug-row" style="margin-top:6px;">
           <span class="dp-debug-label">TIP:</span>
-          <span class="dp-debug-mono" style="color:var(--text3);">single-segment paths that serve multiple instructions need to be split in Inkscape; tags can be edited in [dashboard/cpe315-datapath-layout-manual.svg](dashboard/cpe315-datapath-layout-manual.svg) and we re-splice.</span>
+          <span class="dp-debug-mono" style="color:var(--text3);">single-segment paths that serve multiple instructions need to be split in Inkscape. See docs/EDIT.md for the splice workflow.</span>
         </div>
       </div>
     </div>
@@ -2152,7 +2259,6 @@ function initDatapath() {
   }
 
   renderDatapathChips();
-  renderDatapathPresets();
   renderDatapathAll();
 
   document.getElementById('dp-clear').addEventListener('click', () => {
@@ -2163,17 +2269,6 @@ function initDatapath() {
     DATAPATH_CPE315.instructionOrder.forEach(i => dpState.selected.add(i));
     renderDatapathAll();
   });
-  document.getElementById('dp-presets').addEventListener('change', (e) => {
-    const preset = e.target.value;
-    if (!preset) return;
-    const list = DATAPATH_CPE315.presets[preset];
-    if (list) {
-      dpState.selected = new Set(list);
-      renderDatapathAll();
-    }
-    e.target.value = '';
-  });
-
   // Debug mode: toggle hover-inspector on the SVG.
   const dbgBtn = document.getElementById('dp-debug');
   const dbgPanel = document.getElementById('dp-debug-panel');
@@ -2246,16 +2341,6 @@ function renderDatapathChips() {
   });
 }
 
-function renderDatapathPresets() {
-  const sel = document.getElementById('dp-presets');
-  Object.keys(DATAPATH_CPE315.presets).forEach(label => {
-    const opt = document.createElement('option');
-    opt.value = label;
-    opt.textContent = label;
-    sel.appendChild(opt);
-  });
-}
-
 function renderDatapathAll() {
   document.querySelectorAll('#dp-chips .dp-chip').forEach(chip => {
     chip.classList.toggle('selected', dpState.selected.has(chip.dataset.inst));
@@ -2281,11 +2366,10 @@ function renderDatapathControlTable() {
     const inst = DATAPATH_CPE315.instructions[name];
     const cells = sigs.map(sig => {
       const v = inst.controls[sig];
-      let cls = 'dp-cell-X';
-      if (v === 1) cls = 'dp-cell-1';
-      else if (v === 0) cls = 'dp-cell-0';
-      else if (v === 'X') cls = 'dp-cell-X';
-      else cls = 'dp-cell-op';
+      // Value -> cell class: known scalars (0/1/X) and mux-select integers (2,3)
+      // and branch-logic tags (AND, NAND) all get derived class names so each
+      // value has its own dark-theme color in the table.
+      let cls = `dp-cell-${v}`;
       const tip = sigMeta[sig] && sigMeta[sig].values && sigMeta[sig].values[v]
         ? sigMeta[sig].values[v] : sigMeta[sig].description;
       return `<td class="${cls}" title="${tip}">${v}</td>`;
