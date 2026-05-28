@@ -25,9 +25,10 @@ classroom-ready teaching tool for any single-cycle MIPS coverage.
 
 ## Live demo
 
-(Add your Vercel URL here after first deploy. The original Cal Poly
-classroom-private copy is at
-[dashboard-indol-five-42.vercel.app/?tab=cpe315](https://dashboard-indol-five-42.vercel.app/?tab=cpe315).)
+**[mips-single-cycle-visualizer.vercel.app](https://mips-single-cycle-visualizer.vercel.app)**
+
+Try a deep link: [/?i=lw,add](https://mips-single-cycle-visualizer.vercel.app/?i=lw,add)
+preselects `lw` and `add` — the diagram lights up immediately.
 
 ## Quick start
 
