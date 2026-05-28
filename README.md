@@ -6,9 +6,7 @@ blocks, wires, and control signals that subset activates — with the
 control-signal truth table and per-component activation table rendered
 alongside.
 
-Built for **Cal Poly CPE 315 — Computer Architecture** (Patterson &
-Hennessy, *Computer Organization and Design*, ch. 4) and shareable as a
-classroom-ready teaching tool for any single-cycle MIPS coverage.
+Teaching tool for any single-cycle MIPS coverage.
 
 ## What it does
 
@@ -26,9 +24,6 @@ classroom-ready teaching tool for any single-cycle MIPS coverage.
 ## Live demo
 
 **[mips-single-cycle-visualizer.vercel.app](https://mips-single-cycle-visualizer.vercel.app)**
-
-Try a deep link: [/?i=lw,add](https://mips-single-cycle-visualizer.vercel.app/?i=lw,add)
-preselects `lw` and `add` — the diagram lights up immediately.
 
 ## Quick start
 
@@ -72,9 +67,9 @@ mis-lit elements).
 | Doc | Read it when |
 |---|---|
 | [docs/DEPLOY.md](docs/DEPLOY.md) | You're setting up your own Vercel deploy from a fork. |
-| [docs/EDIT.md](docs/EDIT.md) | You want to fix a typo, change a value, add an instruction. |
+| [docs/EDIT.md](docs/EDIT.md) | You want to fix a typo, change a value, or add an instruction. |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | You want to extend the tool (pipeline view, hazards, cache). Explains the lighting model, the MUX_SIGNALS post-pass, and the splice workflow. |
-| [docs/TROUBLESHOOT.md](docs/TROUBLESHOOT.md) | Something is off and you need to figure out which knob to turn. |
+| [docs/TROUBLESHOOT.md](docs/TROUBLESHOOT.md) | Something is off, and you need to figure out which knob to turn. |
 | [cpe315-datapath-WIRE_REFERENCE.md](cpe315-datapath-WIRE_REFERENCE.md) | Per-wire ground truth — "which instructions should light this wire". Use as a sanity check when retagging the SVG. |
 
 ## Roadmap (planned extensions)
@@ -100,10 +95,3 @@ layout SVG into the page.
 ## License
 
 [MIT](LICENSE).
-
-## Credits
-
-Built by [Aidan Hobbs](https://github.com/aihobbss) (Cal Poly CPE
-'27) as a study aid for Prof. John Seng's CPE 315 — Spring 2026. The
-control values and component-activation tables follow the Patterson &
-Hennessy 4e reference and Seng's classroom truth tables.
